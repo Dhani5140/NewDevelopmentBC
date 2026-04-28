@@ -1,0 +1,79 @@
+page 50160 "Vendsel List"
+{
+    PageType = List;
+    SourceTable = "Vensel Header";
+    Caption = 'Vendor Selection List';
+    ApplicationArea = All;
+    UsageCategory = Lists;
+    CardPageId = "Vendor Select Header";
+    Editable = FALSE;
+
+    layout
+    {
+        area(content)
+        {
+            repeater(General)
+            {
+                field("Vensel No."; Rec."Vensel No.")
+                {
+                    ApplicationArea = all;
+                }
+                field("RFQ No."; Rec."RFQ No.")
+                {
+                    ApplicationArea = All;
+                }
+                field("Document Date"; Rec."Document Date")
+                {
+                    ApplicationArea = All;
+                }
+                field(Status; Rec.Status)
+                {
+                    ApplicationArea = All;
+                }
+                // field("Total Amount"; Rec."Total Amount")
+                // {
+                //     ApplicationArea = All;
+                // }
+            }
+        }
+        area(FactBoxes)
+        {
+            part("Document Attachment FactBox"; "Document Attachment FactBox")
+            {
+                ApplicationArea = All;
+                Caption = 'Attachments';
+                SubPageLink = "Table ID" = CONST(database::"RFQ Header"), "No." = FIELD("RFQ No.");
+            }
+            systempart(Notes; Notes)
+            {
+                ApplicationArea = all;
+            }
+        }
+    }
+    actions
+    {
+        area(Processing)
+        {
+            action("Print")
+            {
+                ApplicationArea = All;
+                Image = Print;
+                Promoted = True;
+                PromotedCategory = Process;
+                PromotedIsBig = TRUE;
+
+                trigger OnAction()
+                var
+                    lRec: Record "RFQ Header";
+                begin
+                    Rec.TestField(Rec."RFQ No.");
+                    lRec.RESET;
+                    lRec.SETRANGE(lRec."RFQ No.", Rec."RFQ No.");
+
+                end;
+            }
+        }
+    }
+    var
+    // IntCodeunit: Codeunit IntCodeunitForRFQ;
+}
