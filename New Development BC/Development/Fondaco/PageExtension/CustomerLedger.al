@@ -26,6 +26,48 @@ pageextension 70003 MIIPEextCustLedger extends "Customer Ledger Entries"
                     MIICU.CopytoOtherCompany(Rec);
                 end;
             }
+            action(AutoApplied)
+            {
+                ApplicationArea = Basic;
+                Caption = 'Auto Applied';
+                Ellipsis = true;
+                Image = ApplyEntries;
+                ToolTip = 'Auto Applied';
+                Promoted = true;
+
+                trigger OnAction()
+                var
+                    Applied: Codeunit AppliedLedger;
+                    Custled: Record "Cust. Ledger Entry";
+                begin
+                    Applied.AppliesEntries(Rec);
+                    Custled.SetFilter("Document No.", '%1', Rec."Document No.");
+                    if Custled.FindFirst() then begin
+                        Applied.PostDirectApplication(Custled, false);
+                    end
+                end;
+            }
+            action(PreviewApplied)
+            {
+                ApplicationArea = Basic;
+                Caption = 'Preview Auto Applied';
+                Ellipsis = true;
+                Image = ApplyEntries;
+                ToolTip = 'Preview Auto Applied';
+                Promoted = true;
+
+                trigger OnAction()
+                var
+                    Applied: Codeunit AppliedLedger;
+                    Custled: Record "Cust. Ledger Entry";
+                begin
+                    Applied.AppliesEntries(Rec);
+                    Custled.SetFilter("Document No.", '%1', Rec."Document No.");
+                    if Custled.FindFirst() then begin
+                        Applied.PostDirectApplication(Custled, true);
+                    end
+                end;
+            }
             // action(DeleteData)
             // {
             //     ApplicationArea = Basic;

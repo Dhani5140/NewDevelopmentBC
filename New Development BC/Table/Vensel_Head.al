@@ -10,19 +10,16 @@ table 50215 "Vensel Header"
             Caption = 'Vendor Selection No.';
             DataClassification = ToBeClassified;
 
-
-
             trigger OnValidate()
             var
-                myInt: Integer;
+                lRecMSISetup: Record "MII Setup";
             begin
+                lRecMSISetup.Get();
                 IF "Vensel No." <> xRec."Vensel No." THEN BEGIN
-                    grecMIISetup.GET;
                     NoSeries.TestManual(grecMIISetup."Vensel Nos");
                     "No. Series" := '';
                 end;
             END;
-
 
         }
         field(2; "No. Series"; Code[20])
@@ -246,14 +243,18 @@ table 50215 "Vensel Header"
         }
     }
 
-
     trigger OnInsert()
     begin
         IF "Vensel No." = '' THEN BEGIN
             grecMIISetup.GET;
             grecMIISetup.TestField("Vensel Nos");
-            //NoSeriesMgt.InitSeries(grecMIISetup."Vensel Nos", xRec."No. Series", 0D, "Vensel No.", "No. Series");
-            NoSeries.AreRelated(grecMIISetup."Vensel Nos", xRec."No. Series");
+
+            // Perbaikan InitSeries ke modul Business Foundation yang baru
+            "No. Series" := grecMIISetup."Vensel Nos";
+            if NoSeries.AreRelated(grecMIISetup."Vensel Nos", xRec."No. Series") then
+                "No. Series" := xRec."No. Series";
+
+            "Vensel No." := NoSeries.GetNextNo("No. Series");
         END;
         "Document Date" := WORKDATE;
         "Created By" := UserId;
@@ -288,11 +289,10 @@ table 50215 "Vensel Header"
     begin
         lRecMSISetup.GET;
         lRecMSISetup.TESTFIELD("Vensel Nos");
-        //IF NoSeriesMgt.SelectSeries(lRecMSISetup."Vensel Nos", xRec."No. Series", Rec."No. Series") THEN BEGIN
-        //NoSeriesMgt.SetSeries(Rec."Vensel No.");
 
+        // Perbaikan LookupRelatedNoSeries dan GetNextNo
         IF NoSeries.LookupRelatedNoSeries(lRecMSISetup."Vensel Nos", xRec."No. Series", Rec."No. Series") THEN BEGIN
-            NoSeries.GetNextNo(Rec."Vensel No.");
+            Rec."Vensel No." := NoSeries.GetNextNo(Rec."No. Series");
             EXIT(TRUE);
         END;
     end;
@@ -308,7 +308,6 @@ table 50215 "Vensel Header"
         grecMIISetup.GET;
         EXIT(grecMIISetup."Vensel Nos");
     end;
-
 
     procedure updateDocLines(FieldRef: Integer)
     var

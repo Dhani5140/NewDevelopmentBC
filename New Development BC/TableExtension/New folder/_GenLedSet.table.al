@@ -2,7 +2,7 @@ tableextension 51135 genledset extends "General Ledger Setup"
 {
     fields
     {
-        field(11604; "Enable GST (Australia)"; Boolean)
+        field(50100; "Enable GST (Australia)"; Boolean)
         {
             Caption = 'Enable GST (Australia)';
 
@@ -12,15 +12,15 @@ tableextension 51135 genledset extends "General Ledger Setup"
             //         Error(Text1500003);
             // end;
         }
-        field(28042; "Manual Sales WHT Calc."; Boolean)
+        field(50101; "Manual Sales WHT Calc."; Boolean)
         {
             Caption = 'Manual Sales WHT Calc.';
         }
-        field(28046; "Round Amount for WHT Calc"; Boolean)
+        field(50102; "Round Amount for WHT Calc"; Boolean)
         {
             Caption = 'Round Amount for WHT Calc';
         }
-        field(28047; "Enable WHT"; Boolean)
+        field(50103; "Enable WHT"; Boolean)
         {
             Caption = 'Round Amount for WHT Calc';
         }

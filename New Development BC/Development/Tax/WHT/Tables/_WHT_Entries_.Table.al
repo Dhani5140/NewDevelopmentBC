@@ -46,7 +46,7 @@ table 51134 "WHT Entries"
         }
         field(12; Billtopay; code[20])
         {
-
+            TableRelation = Vendor."No.";
         }
         field(14; "User ID"; Code[50])
         {
@@ -82,27 +82,28 @@ table 51134 "WHT Entries"
         // Add changes to field groups here
     }
 
+    procedure CopyFromGenJnlLine(GenJnlLine: Record "Gen. Journal Line")
+    begin
+        "Entry No" := GetLastEntryNo() + 1;
+        Type := GenJnlLine."Gen. Posting Type";
+        Base := GenJnlLine."VAT Base Amount";
+        Amount := GenJnlLine."WHT Amount";
+        "Document Type" := GenJnlLine."Document Type";
+        "Posting Date" := GenJnlLine."Document Date";
+        "Document No." := GenJnlLine."Document No.";
+        "Source Code" := GenJnlLine."Source Code";
+        "Reason Code" := GenJnlLine."Reason Code";
+        "Gen Bus Posting Group" := GenJnlLine."WHT Business Posting Group";
+        "Gen Prod Posting Group" := GenJnlLine."WHT Product Posting Group";
+        "User ID" := CopyStr(UserId(), 1, MaxStrLen("User ID"));
+        Billtopay := GenJnlLine."Bill-to/Pay-to No.";
+    end;
+
+    procedure GetLastEntryNo(): Integer;
     var
-        myInt: Integer;
-
-    trigger OnInsert()
+        FindRecordManagement: Codeunit "Find Record Management";
     begin
-
-    end;
-
-    trigger OnModify()
-    begin
-
-    end;
-
-    trigger OnDelete()
-    begin
-
-    end;
-
-    trigger OnRename()
-    begin
-
+        exit(FindRecordManagement.GetLastEntryIntFieldValue(Rec, FieldNo("Entry No")))
     end;
 
 }

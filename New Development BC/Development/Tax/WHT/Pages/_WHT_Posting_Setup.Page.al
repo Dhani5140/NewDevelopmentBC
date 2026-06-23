@@ -20,6 +20,10 @@ page 51114 "WHT Posting Setup"
                 {
                     ApplicationArea = ALL;
                 }
+                field(Description; Rec.Description)
+                {
+                    ApplicationArea = all;
+                }
 
                 field("WHT %"; Rec."WHT %")
                 {
@@ -33,55 +37,59 @@ page 51114 "WHT Posting Setup"
                 {
                     ApplicationArea = ALL;
                 }
-                field("WHT Report"; Rec."WHT Report")
+                field("Receivable WHT Account Code"; Rec."Receivable WHT Account Code")
                 {
                     ApplicationArea = ALL;
                 }
-                field("WHT Report Line No. Series"; Rec."WHT Report Line No. Series")
-                {
-                    ApplicationArea = ALL;
-                }
-                field("Revenue Type"; Rec."Revenue Type")
-                {
-                    ApplicationArea = all;
-                }
+                // field("WHT Report"; Rec."WHT Report")
+                // {
+                //     ApplicationArea = ALL;
+                // }
+                // field("WHT Report Line No. Series"; Rec."WHT Report Line No. Series")
+                // {
+                //     ApplicationArea = ALL;
+                // }
+                // field("Revenue Type"; Rec."Revenue Type")
+                // {
+                //     ApplicationArea = all;
+                // }
 
-                field("Bal. Prepaid Account Type"; Rec."Bal. Prepaid Account Type")
-                {
-                    ApplicationArea = all;
-                }
-                field("Bal. Prepaid Account No."; Rec."Bal. Prepaid Account No.")
-                {
-                    ApplicationArea = all;
-                }
-                field("Bal. Payable Account No."; Rec."Bal. Payable Account No.")
-                {
-                    ApplicationArea = all;
-                }
-                field("Bal. Payable Account Type"; Rec."Bal. Payable Account Type")
-                {
-                    ApplicationArea = all;
-                }
-                field("Sales WHT Adj. Account No."; Rec."Sales WHT Adj. Account No.")
-                {
-                    ApplicationArea = all;
-                }
-                field("Realized WHT Type"; Rec."Realized WHT Type")
-                {
-                    ApplicationArea = all;
-                }
-                field("WHT Minimum Invoice Amount"; Rec."WHT Minimum Invoice Amount")
-                {
-                    ApplicationArea = ALL;
-                }
-                field("WHT Calculation Rule"; Rec."WHT Calculation Rule")
-                {
-                    ApplicationArea = ALL;
-                }
-                field(Sequence; Rec.Sequence)
-                {
-                    ApplicationArea = ALL;
-                }
+                // field("Bal. Prepaid Account Type"; Rec."Bal. Prepaid Account Type")
+                // {
+                //     ApplicationArea = all;
+                // }
+                // field("Bal. Prepaid Account No."; Rec."Bal. Prepaid Account No.")
+                // {
+                //     ApplicationArea = all;
+                // }
+                // field("Bal. Payable Account No."; Rec."Bal. Payable Account No.")
+                // {
+                //     ApplicationArea = all;
+                // }
+                // field("Bal. Payable Account Type"; Rec."Bal. Payable Account Type")
+                // {
+                //     ApplicationArea = all;
+                // }
+                // field("Sales WHT Adj. Account No."; Rec."Sales WHT Adj. Account No.")
+                // {
+                //     ApplicationArea = all;
+                // }
+                // field("Realized WHT Type"; Rec."Realized WHT Type")
+                // {
+                //     ApplicationArea = all;
+                // }
+                // field("WHT Minimum Invoice Amount"; Rec."WHT Minimum Invoice Amount")
+                // {
+                //     ApplicationArea = ALL;
+                // }
+                // field("WHT Calculation Rule"; Rec."WHT Calculation Rule")
+                // {
+                //     ApplicationArea = ALL;
+                // }
+                // field(Sequence; Rec.Sequence)
+                // {
+                //     ApplicationArea = ALL;
+                // }
             }
         }
         area(Factboxes)

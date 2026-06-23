@@ -89,7 +89,7 @@ page 50114 "RFQ Header"
         }
         area(FactBoxes)
         {
-            part("Document Attachment FactBox"; "Document Attachment Factbox")
+            part("Document Attachment FactBox"; "Doc. Attachment List Factbox")
             {
                 ApplicationArea = All;
                 Caption = 'Attachments';

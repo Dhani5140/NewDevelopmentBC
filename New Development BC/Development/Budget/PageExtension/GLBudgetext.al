@@ -6,15 +6,15 @@ pageextension 60100 GLBudget extends "G/L Budget Entries"
         {
             field(BudgetName; Rec.BudgetName)
             {
-
+                ApplicationArea = all;
             }
             field(BudgetCode; Rec.BudgetCode)
             {
-
+                ApplicationArea = all;
             }
             field(StatusBudget; Rec.StatusBudget)
             {
-
+                ApplicationArea = all;
             }
         }
 
@@ -22,11 +22,11 @@ pageextension 60100 GLBudget extends "G/L Budget Entries"
         {
             field(Realized; Rec.Realized)
             {
-
+                ApplicationArea = all;
             }
             field(Remaining; Rec.Remaining)
             {
-
+                ApplicationArea = all;
             }
 
         }

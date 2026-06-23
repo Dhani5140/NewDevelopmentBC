@@ -6,6 +6,7 @@ page 80136 "RFQ Line Details Subform"
     DelayedInsert = true;
     RefreshOnActivate = TRUE;
     InsertAllowed = FALSE;
+    Permissions = TableData "RFQ Line Details" = rmid;
 
     layout
     {
@@ -13,7 +14,8 @@ page 80136 "RFQ Line Details Subform"
         {
             repeater(General)
             {
-                field("Entry No. RFQ Vendor"; Rec."Entry No. RFQ Vendor")
+                field("Entry No. RFQ Vendor";
+                Rec."Entry No. RFQ Vendor")
                 {
                     ApplicationArea = All;
                     Editable = gBolEditable;

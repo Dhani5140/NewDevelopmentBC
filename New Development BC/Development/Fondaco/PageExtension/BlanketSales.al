@@ -26,32 +26,32 @@ pageextension 70001 MIIPEextBSO extends "Blanket Sales Order"
         }
         addafter("Shipping and Billing")
         {
-            group(Control1900201301)
-            {
-                Caption = 'Prepayment';
-                field("Prepayment %"; Rec."Prepayment %")
-                {
-                    ApplicationArea = Prepayments;
-                    Importance = Promoted;
-                    ToolTip = 'Specifies the prepayment percentage to use to calculate the prepayment for sales.';
+            // group(Control1900201301)
+            // {
+            //     Caption = 'Prepayment';
+            //     field("Prepayment %"; Rec."Prepayment %")
+            //     {
+            //         ApplicationArea = Prepayments;
+            //         Importance = Promoted;
+            //         ToolTip = 'Specifies the prepayment percentage to use to calculate the prepayment for sales.';
 
-                    // trigger OnValidate()
-                    // begin
-                    //     //Prepayment37OnAfterValidate();
-                    // end;
-                }
-                field("Prepmt. Payment Terms Code"; Rec."Prepmt. Payment Terms Code")
-                {
-                    ApplicationArea = Prepayments;
-                    ToolTip = 'Specifies the code that represents the payment terms for prepayment invoices related to the sales document.';
-                }
-                field("Prepayment Due Date"; Rec."Prepayment Due Date")
-                {
-                    ApplicationArea = Prepayments;
-                    Importance = Promoted;
-                    ToolTip = 'Specifies when the prepayment invoice for this sales order is due.';
-                }
-            }
+            //         // trigger OnValidate()
+            //         // begin
+            //         //     //Prepayment37OnAfterValidate();
+            //         // end;
+            //     }
+            //     field("Prepmt. Payment Terms Code"; Rec."Prepmt. Payment Terms Code")
+            //     {
+            //         ApplicationArea = Prepayments;
+            //         ToolTip = 'Specifies the code that represents the payment terms for prepayment invoices related to the sales document.';
+            //     }
+            //     field("Prepayment Due Date"; Rec."Prepayment Due Date")
+            //     {
+            //         ApplicationArea = Prepayments;
+            //         Importance = Promoted;
+            //         ToolTip = 'Specifies when the prepayment invoice for this sales order is due.';
+            //     }
+            // }
         }
     }
 
@@ -232,6 +232,17 @@ pageextension 70001 MIIPEextBSO extends "Blanket Sales Order"
                 RunObject = Page "Sales Orders";
                 RunPageLink = "Blanket Order No." = field("No.");
                 RunPageView = sorting("Document Type", "Blanket Order No.", "Blanket Order Line No.");
+                ToolTip = 'View related sales order. ';
+            }
+
+            action(PagePostedSalesInvoices)
+            {
+                ApplicationArea = basic;
+                Caption = 'Sales Invoice';
+                Image = SalesInvoice;
+                RunObject = Page "Posted Sales Invoice Lines";
+                RunPageLink = "Blanket Order No." = field("No.");
+                RunPageView = sorting("Blanket Order No.", "Blanket Order Line No.");
                 ToolTip = 'View related sales order. ';
             }
 

@@ -2,7 +2,7 @@
     "id": "4a0c02d3-42d1-4f97-aeb6-d7ae7f9791fb",
     "name": "Sandboxid",
     "publisher": "CAD1",
-    "version": "1.0.0.0",
+    "version": "1.0.0.10",
     "brief": "",
     "description": "",
     "privacyStatement": "",
@@ -12,9 +12,9 @@
     "logo": "",
     "dependencies": [],
     "screenshots": [],
- "platform": "1.0.0.0",
-  "application": "26.0.0.0",
-  "idRanges": [
+    "platform": "1.0.0.0",
+    "application": "28.1.0.0",
+    "idRanges": [
     {
       "from": 50100,
       "to": 99999
@@ -22,12 +22,11 @@
   ],
   "resourceExposurePolicy": {
     "allowDebugging": true,
-    "allowDownloadingSource": true,
-    "includeSourceInSymbolFile": true
+    "allowDownloadingSource": false,
+    "includeSourceInSymbolFile": false
   },
-  "runtime": "15.0",
+  "runtime": "17.0",
   "features": [
     "NoImplicitWith"
-  ]
-    
+  ]   
 }

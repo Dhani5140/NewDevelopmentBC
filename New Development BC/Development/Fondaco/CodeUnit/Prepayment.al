@@ -5,7 +5,8 @@ codeunit 70001 Prepay
                   TableData "Sales Invoice Line" = rimd,
                   TableData "Sales Cr.Memo Header" = rimd,
                   TableData "Sales Cr.Memo Line" = rimd,
-                  TableData "General Posting Setup" = rimd;
+                  TableData "General Posting Setup" = rimd,
+                  tabledata "G/L Entry" = rimd;
     TableNo = "Sales Header";
     trigger OnRun()
     begin
@@ -13,7 +14,7 @@ codeunit 70001 Prepay
     end;
 
 
-    procedure "Code"(var SalesHeader2: Record "Sales Header"; DocumentType: Option Invoice,"Credit Memo")
+    procedure "Code"(var SalesHeader2: Record "Sales Header"; DocumentType: Option Invoice,"Credit Memo"; Line: Record MiiTabScheduleLine)
     var
         SourceCodeSetup: Record "Source Code Setup";
         SalesHeader: Record "Sales Header";
@@ -46,6 +47,7 @@ codeunit 70001 Prepay
         PostedDocTabNo: Integer;
         LineNo: Integer;
     begin
+        updateprepayment(SalesHeader2, Line);
 
         SalesHeader := SalesHeader2;
         GLSetup.GetRecordOnce();
@@ -180,9 +182,13 @@ codeunit 70001 Prepay
         // Update lines & header
         UpdateSalesDocument(SalesHeader, SalesLine, DocumentType, GenJnlLineDocNo);
         ShouldSetPendingPrepaymentStatus := SalesHeader.TestStatusIsNotPendingPrepayment();
-        if ShouldSetPendingPrepaymentStatus then
-            SalesHeader.Status := SalesHeader.Status::"Pending Prepayment";
+        // if ShouldSetPendingPrepaymentStatus then
+        //     SalesHeader.Status := SalesHeader.Status::"Pending Prepayment";
         SalesHeader.Modify();
+
+        Line.CustLedgerNo := GenJnlLineDocNo;
+        Line.Status := Line.Status::Paid;
+        Line.Modify();
 
         if PreviewMode then begin
             if GuiAllowed then
@@ -222,6 +228,7 @@ codeunit 70001 Prepay
     var
         GenJnlLine: Record "Gen. Journal Line";
         IsHandled: Boolean;
+        Header: Record MiiTabScheduleHeader;
     begin
         IsHandled := false;
         if not IsHandled then begin
@@ -229,6 +236,9 @@ codeunit 70001 Prepay
                 SalesHeader."Posting Date", SalesHeader."Document Date", SalesHeader."VAT Reporting Date", PostingDescription,
                 SalesHeader."Shortcut Dimension 1 Code", SalesHeader."Shortcut Dimension 2 Code",
                 SalesHeader."Dimension Set ID", SalesHeader."Reason Code");
+
+            Header.SetFilter("Document No.", '%1', SalesHeader."No.");
+            Header.FindFirst();
 
             GenJnlLine.CopyDocumentFields(DocType, DocNo, ExtDocNo, SrcCode, PostingNoSeriesCode);
 
@@ -254,7 +264,12 @@ codeunit 70001 Prepay
             if GLSetup."Journal Templ. Name Mandatory" then
                 GenJnlLine."Journal Template Name" := GenJournalTemplate.Name;
 
+            GenJnlLine."Prepmt. Bank" := Header."No.";
+
+            GenJnlLine."Blanket No." := SalesHeader."No.";
+
             Clear(GenJnlLine."Pmt. Discount Date");
+            Clear(GenJnlLine."Payment Discount %");
 
             GenJnlPostLine.RunWithCheck(GenJnlLine);
         end;
@@ -290,11 +305,11 @@ codeunit 70001 Prepay
                 begin
                     SalesHeader.TestField("Prepayment Due Date");
                     SalesHeader.TestField("Prepmt. Cr. Memo No.", '');
-                    if SalesHeader."Prepayment No." = '' then
-                        if not PreviewMode then
-                            UpdateInvoiceDocNos(SalesHeader, ModifyHeader)
-                        else
-                            SalesHeader."Prepayment No." := '***';
+                    //if SalesHeader."Prepayment No." = '' then
+                    if not PreviewMode then
+                        UpdateInvoiceDocNos(SalesHeader, ModifyHeader)
+                    else
+                        SalesHeader."Prepayment No." := '***';
                     DocNo := SalesHeader."Prepayment No.";
                     NoSeriesCode := SalesHeader."Prepayment No. Series";
                 end;
@@ -429,6 +444,7 @@ codeunit 70001 Prepay
         if GLSetup."Journal Templ. Name Mandatory" then
             GenJnlLine."Journal Template Name" := GenJournalTemplate.Name;
 
+        Clear(GenJnlLine."Payment Discount %");
         Clear(GenJnlLine."Pmt. Discount Date");
         GenJnlPostLine.RunWithCheck(GenJnlLine);
     end;
@@ -1458,6 +1474,25 @@ codeunit 70001 Prepay
         exit(2);
     end;
 
+    local procedure updateprepayment(var SH: Record "Sales Header"; Line: Record MiiTabScheduleLine)
+    var
+        SalesLine: Record "Sales Line";
+    begin
+        SH.CalcFields(Amount);
+        SH."Prepayment %" += (Line.Amount / SH.Amount) * 100;
+        SH.Validate("Prepayment %");
+        SH.Modify();
+        Commit();
+        SalesLine.SetFilter("Document No.", Line."Document No.");
+        SalesLine.SetRange("Document Type", SalesLine."Document Type"::"Blanket Order");
+        SalesLine.SetFilter(Type, '<>%1', SalesLine.Type::" ");
+        if SalesLine.FindSet() then begin
+            SalesLine."Prepayment %" := SH."Prepayment %";
+            SalesLine.Validate("Prepayment %");
+            SalesLine.Modify();
+        end;
+    end;
+
 
     // local procedure GetCurrencyAmountRoundingPrecision(CurrencyCode: Code[10]): Decimal
     // var
@@ -1548,6 +1583,34 @@ codeunit 70001 Prepay
     begin
         if SalesHeader."Prepayment %" = 0 then begin
             IsHandled := true;
+        end;
+    end;
+
+
+    [EventSubscriber(ObjectType::Codeunit, 12, 'OnPostCustOnAfterAssignReceivablesAccount', '', false, false)]
+    local procedure Changetobank(GenJnlLine: Record "Gen. Journal Line"; CustomerPostingGroup: Record "Customer Posting Group"; var ReceivablesAccount: Code[20])
+    var
+        bank: Record "Bank Account Posting Group";
+    begin
+        if GenJnlLine."Prepmt. Bank" <> '' then begin
+            bank.SetFilter(Code, '%1', GenJnlLine."Prepmt. Bank");
+            if bank.FindSet() then begin
+                ReceivablesAccount := bank."G/L Account No.";
+            end;
+        end;
+    end;
+
+    [EventSubscriber(ObjectType::Codeunit, 12, 'OnAfterGLFinishPosting', '', false, false)]
+    local procedure Changetobank2(GLEntry: Record "G/L Entry"; var GenJnlLine: Record "Gen. Journal Line"; var IsTransactionConsistent: Boolean; FirstTransactionNo: Integer; var GLRegister: Record "G/L Register"; var TempGLEntryBuf: Record "G/L Entry" temporary; var NextEntryNo: Integer; var NextTransactionNo: Integer)
+    var
+        bank: Record "Bank Account Posting Group";
+    begin
+        if GenJnlLine."Prepmt. Bank" <> '' then begin
+            bank.SetFilter(Code, '%1', GenJnlLine."Prepmt. Bank");
+            if bank.FindSet() then begin
+                GLEntry."G/L Account No." := bank."G/L Account No.";
+                GLEntry.Modify();
+            end;
         end;
     end;
 

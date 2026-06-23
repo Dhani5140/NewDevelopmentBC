@@ -161,7 +161,7 @@ page 50170 "PR Material Card sh"
         }
         area(FactBoxes)
         {
-            part("Document Attachment FactBox"; "Document Attachment FactBox")
+            part("Document Attachment FactBox"; "Doc. Attachment List Factbox")
             {
                 ApplicationArea = All;
                 Caption = 'Attachments';

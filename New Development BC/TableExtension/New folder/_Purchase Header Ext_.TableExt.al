@@ -94,7 +94,7 @@ tableextension 80100 "Purchase Header Ext" extends "Purchase Header"
         field(73710; "Exported Date"; Date)
         {
         }
-        field(28048; "Actual Vendor No."; Code[20])
+        field(50201; "Actual Vendor No."; Code[20])
         {
             Caption = 'Actual Vendor No.';
             TableRelation = Vendor;

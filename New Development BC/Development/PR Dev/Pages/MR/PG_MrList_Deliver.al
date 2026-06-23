@@ -43,7 +43,7 @@ page 50166 "Material Req. List deliver"
         }
         area(FactBoxes)
         {
-            part("Document Attachment FactBox"; "Document Attachment FactBox")
+            part("Document Attachment FactBox"; "Doc. Attachment List Factbox")
             {
                 ApplicationArea = All;
                 Caption = 'Attachments';

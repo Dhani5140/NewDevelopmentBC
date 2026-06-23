@@ -42,6 +42,11 @@ page 70002 SchedulePaymentLine
                     ApplicationArea = Suite;
                     Editable = false;
                 }
+                field(CustLedgerNo; Rec.CustLedgerNo)
+                {
+                    ApplicationArea = all;
+                    Editable = false;
+                }
             }
         }
     }

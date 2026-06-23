@@ -5,6 +5,8 @@ page 80111 "RFQ Vendor Subform"
     InsertAllowed = TRUE;
     PopulateAllFields = TRUE;
     RefreshOnActivate = TRUE;
+    Permissions = TableData "RFQ Vendor List" = rmid, tabledata RFQ_Vendor_ = rmid;
+
 
     layout
     {
@@ -133,25 +135,88 @@ page 80111 "RFQ Vendor Subform"
             action(sendd)
 
             {
+                // ApplicationArea = Basic, Suite;
+                // Caption = 'Send Email';
+                // Visible = true;
+                // Ellipsis = true;
+                // Image = SendToMultiple;
+                // ToolTip = 'Prepare to send the document according to the vendor''s sending profile, such as attached to an email. The Send document to window opens first so you can confirm or select a sending profile.';
+
+                // trigger OnAction()
+                // // var
+                // //     PurchaseHeader: Record "RFQ Vendor List";
+                // // begin
+                // //     if rec.Status = Rec.Status::"Send To Vendor" then begin
+                // //         PurchaseHeader := Rec;
+                // //         CurrPage.SetSelectionFilter(PurchaseHeader);
+                // //         PurchaseHeader.SendRecords();
+                // //     end else begin
+                // //         Error('Error to print report because RFQ Status is not Send To Vendor');
+                // //     end;
+                // var
+                //     PurchaseHeader: Record "RFQ Vendor List";
+                //     rfq: Codeunit "RFQ Function";
+                // begin
+                //     CurrPage.SetSelectionFilter(PurchaseHeader);
+                //     if PurchaseHeader.FindSet() then
+                //         repeat
+                //             Message('DEBUG: Vendor=%1, Status=%2, Email=%3, RFQ No=%4, EntryNo=%5',
+                //                     PurchaseHeader."Vendor No.",
+                //                     PurchaseHeader.Status,
+                //                     PurchaseHeader.email,
+                //                     PurchaseHeader."RFQ No.",
+                //                     PurchaseHeader."Entry No. RFQ Vendor");  // <<< TAMBAH INI
+
+                //             if PurchaseHeader.Status = PurchaseHeader.Status::"Send To Vendor" then begin
+                //                 rfq.SendEMailWithAttachment(PurchaseHeader.email, PurchaseHeader."RFQ No.", PurchaseHeader."Entry No. RFQ Vendor");
+                //             end else
+                //                 Error('Status vendor %1 bukan Send To Vendor. Value: %2', PurchaseHeader."Vendor No.", PurchaseHeader.Status);
+                //         until PurchaseHeader.Next() = 0;
+                // end;
+
                 ApplicationArea = Basic, Suite;
                 Caption = 'Send Email';
                 Visible = true;
                 Ellipsis = true;
                 Image = SendToMultiple;
-                ToolTip = 'Prepare to send the document according to the vendor''s sending profile, such as attached to an email. The Send document to window opens first so you can confirm or select a sending profile.';
 
                 trigger OnAction()
                 var
                     PurchaseHeader: Record "RFQ Vendor List";
+                    rfq: Codeunit "RFQ Function";
                 begin
-                    if rec.Status = Rec.Status::"Send To Vendor" then begin
-                        PurchaseHeader := Rec;
-                        CurrPage.SetSelectionFilter(PurchaseHeader);
-                        PurchaseHeader.SendRecords();
-                    end else begin
-                        Error('Error to print report because RFQ Status is not Send To Vendor');
-                    end;
+                    CurrPage.SetSelectionFilter(PurchaseHeader);
+                    IF PurchaseHeader.FindSet() THEN
+                        REPEAT
+                            // WAJIB: Hitung FlowField dulu sebelum dibaca
+                            PurchaseHeader.CalcFields(Status);
+
+                            // Debug sementara - hapus setelah confirmed working
+                            Message('DEBUG: Vendor=%1, Status=%2, Email=%3',
+                                PurchaseHeader."Vendor No.",
+                                PurchaseHeader.Status,
+                                PurchaseHeader.email);
+
+                            // Validasi email tidak kosong
+                            IF PurchaseHeader.email = '' THEN
+                                ERROR('Vendor %1 belum memiliki email. Isi email vendor terlebih dahulu.',
+                                      PurchaseHeader."Vendor No.");
+
+                            // Validasi status
+                            IF PurchaseHeader.Status <> PurchaseHeader.Status::"Send To Vendor" THEN
+                                ERROR('RFQ harus berstatus Send To Vendor. Status saat ini: %1',
+                                      PurchaseHeader.Status);
+
+                            // Kirim email
+                            rfq.SendEMailWithAttachment(
+                                PurchaseHeader.email,
+                                PurchaseHeader."RFQ No.",
+                                PurchaseHeader."Entry No. RFQ Vendor"
+                            );
+                        UNTIL PurchaseHeader.Next() = 0;
                 end;
+
+
             }
             // action("Print")
             // {

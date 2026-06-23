@@ -145,7 +145,7 @@ page 50158 "RFQ Card SH"
         }
         area(FactBoxes)
         {
-            part("Document Attachment FactBox"; "Document Attachment FactBox")
+            part("Document Attachment FactBox"; "Doc. Attachment List Factbox")
             {
                 ApplicationArea = All;
                 Caption = 'Attachments';

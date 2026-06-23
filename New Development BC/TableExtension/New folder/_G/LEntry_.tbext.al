@@ -2,12 +2,12 @@ tableextension 51145 "G/L Register" extends "G/L Register"
 {
     fields
     {
-        field(28040; "From WHT Entry No."; Integer)
+        field(50100; "From WHT Entry No."; Integer)
         {
             Caption = 'From WHT Entry No.';
             TableRelation = "WHT Entry";
         }
-        field(28041; "To WHT Entry No."; Integer)
+        field(50101; "To WHT Entry No."; Integer)
         {
             Caption = 'To WHT Entry No.';
             TableRelation = "WHT Entry";

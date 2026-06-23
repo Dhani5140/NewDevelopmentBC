@@ -128,7 +128,7 @@ page 50175 "Material Req. Card APPRV"
         }
         area(FactBoxes)
         {
-            part("Document Attachment FactBox"; "Document Attachment FactBox")
+            part("Document Attachment FactBox"; "Doc. Attachment List Factbox")
             {
                 ApplicationArea = All;
                 Caption = 'Attachments';

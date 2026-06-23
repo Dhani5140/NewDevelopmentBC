@@ -8,6 +8,7 @@
 //     begin
 
 //         if PreviewMode Then
+
 //             PostingPreviewnHandler.PreventCommit();
 
 //         WhtEntries.Init();

@@ -1,0 +1,65 @@
+.scheduler {
+    display: flex;
+    /* height: 700px; */
+    height: fit-content;
+    font-family: Segoe UI;
+    font-size: 13px;
+}
+
+.left-panel {
+    /* width: 420px; */
+    width: fit-content;
+    border-right: 1px solid #ddd;
+    background: #f8f8f8;
+    display: flex;
+    flex-direction: column;
+}
+
+.grid-header {
+    display: flex;
+    background: #ececec;
+    font-weight: 600;
+    padding: 8px 6px;
+    border-bottom: 1px solid #ddd;
+}
+
+.grid-body {
+    overflow-y: auto;
+    flex: 1;
+}
+
+.grid-row {
+    display: flex;
+    padding: 6px;
+    border-bottom: 1px solid #eee;
+}
+
+.grid-row:hover {
+    background: #f0f7ff;
+}
+
+.col-name { width: 200px; }
+.col-start { width: 80px; }
+.col-end { width: 80px; }
+.col-progress { width: 40px; }
+
+.right-panel {
+    flex: 1;
+    overflow: auto;
+}
+
+/* Sembunyikan bar untuk task tanpa tanggal */
+.no-bar .gtaskbar {
+    display: none !important;
+}
+
+/* Lebarkan kolom kiri */
+.gtaskname {
+    width: 350px !important;
+}
+
+/* Optional styling biar lebih clean */
+.gtask {
+    font-size: 13px;
+}
+

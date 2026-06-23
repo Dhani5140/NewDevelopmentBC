@@ -16,9 +16,9 @@ pageextension 70005 PgExtSODetail extends "Sales Order Subform"
                 ToolTip = 'Calculate Complimentary Item ( Bonus / Bundled Items )';
                 ApplicationArea = all;
                 Image = Process;
-                Promoted = true;
+                //Promoted = true;
                 //PromotedCategory = Category6;
-                PromotedIsBig = true;
+                //PromotedIsBig = true;
 
                 // RunObject = Page PgCompItemPopUp;
                 // RunPageLink = CompMainItem = field("No.");

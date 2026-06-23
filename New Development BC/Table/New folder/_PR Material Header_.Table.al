@@ -324,29 +324,55 @@ table 80103 "PR Material Header"
             Clustered = true;
         }
     }
+    // trigger OnDelete()
+    // var
+    //     lrecPurchaseReqLine: Record "PR Material Line";
+    // begin
+    //     TestField("Status", "Status"::Open);
+    //     lrecPurchaseReqLine.RESET();
+    //     lrecPurchaseReqLine.SETRANGE("Purchase Req. No.", Rec."Purchase Req. No.");
+    //     IF lrecPurchaseReqLine.Find('-') THEN BEGIN
+    //         lrecPurchaseReqLine.DELETEALL(TRUE)
+    //     END
+    // end;
+
     trigger OnDelete()
     var
-        lrecPurchaseReqLine: Record "PR Material Line";
+        PRLine: Record "PR Material Line";
+        NoSeriesLine: Record "No. Series Line";
+        Noseries: Codeunit "No. Series";
     begin
-        TestField("Status", "Status"::Open);
-        lrecPurchaseReqLine.RESET();
-        lrecPurchaseReqLine.SETRANGE("Purchase Req. No.", Rec."Purchase Req. No.");
-        IF lrecPurchaseReqLine.Find('-') THEN BEGIN
-            lrecPurchaseReqLine.DELETEALL(TRUE)
-        END
+        TestField(Status, Status::Open);
+
+
+        PRLine.SetRange("Purchase Req. No.", "Purchase Req. No.");
+        PRLine.DeleteAll(true);
+
+
+        if Status = Status::Open then begin
+            NoSeriesLine.SetRange("Series Code", "No. Series");
+            NoSeriesLine.SetRange("Starting Date", WorkDate);
+            if NoSeriesLine.FindFirst() then begin
+
+                NoSeriesLine."Last No. Used" := Noseries.GetLastNoUsed("No. Series");
+
+                if NoSeriesLine."Last No. Used" <> '' then
+                    NoSeriesLine."Last No. Used" := IncStr(NoSeriesLine."Last No. Used", -1);
+                NoSeriesLine.Modify();
+            end;
+        end;
     end;
+
 
     trigger OnInsert()
     var
         lRecMSISetup: Record "MII Setup";
     begin
         if "Purchase Req. No." = '' then begin
-            lRecMSISetup.reset();
-            IF lRecMSISetup.GET() then begin
-                lRecMSISetup.TestField("PR Material Nos.");
-            end;
-            //NoSeriesMgt.InitSeries(lRecMSISetup."PR Material Nos.", xRec."No. Series", 0D, "Purchase Req. No.", "No. Series");
-            NoSeries.AreRelated(lRecMSISetup."PR Material Nos.", xRec."No. Series");
+            lRecMSISetup.Get();
+            lRecMSISetup.TestField("PR Material Nos.");
+            "Purchase Req. No." := Noseries.GetNextNo(lRecMSISetup."PR Material Nos.", WorkDate);  // ← Perubahan 27.4
+            "No. Series" := lRecMSISetup."PR Material Nos.";
         end;
         "User ID" := USERID;
         "Urgent Status" := "Urgent Status"::High;
@@ -370,18 +396,33 @@ table 80103 "PR Material Header"
         "Last Modified Date" := CurrentDateTime;
     end;
 
+    // procedure AssistEdit(): Boolean
+    // var
+    //     lRecMSISetup: Record "MII Setup";
+    // begin
+    //     lRecMSISetup.GET;
+    //     lRecMSISetup.TESTFIELD("PR Material Nos.");
+    //     // IF NoSeriesMgt.SelectSeries(lRecMSISetup."PR Material Nos.", xRec."No. Series", Rec."No. Series") THEN BEGIN
+    //     //     NoSeriesMgt.SetSeries(Rec."Purchase Req. No.");
+    //     IF NoSeries.LookupRelatedNoSeries(lRecMSISetup."PR Material Nos.", xRec."No. Series", Rec."No. Series") THEN BEGIN
+    //         NoSeries.GetNextNo(Rec."Purchase Req. No.");
+    //         EXIT(TRUE);
+    //     END;
+    // end;
+
     procedure AssistEdit(): Boolean
     var
         lRecMSISetup: Record "MII Setup";
+        OldNoSeries: Code[20];
     begin
-        lRecMSISetup.GET;
-        lRecMSISetup.TESTFIELD("PR Material Nos.");
-        // IF NoSeriesMgt.SelectSeries(lRecMSISetup."PR Material Nos.", xRec."No. Series", Rec."No. Series") THEN BEGIN
-        //     NoSeriesMgt.SetSeries(Rec."Purchase Req. No.");
-        IF NoSeries.LookupRelatedNoSeries(lRecMSISetup."PR Material Nos.", xRec."No. Series", Rec."No. Series") THEN BEGIN
-            NoSeries.GetNextNo(Rec."Purchase Req. No.");
-            EXIT(TRUE);
-        END;
+        lRecMSISetup.Get();
+        lRecMSISetup.TestField("PR Material Nos.");
+
+        OldNoSeries := "No. Series";
+        if Noseries.LookupRelatedNoSeries(lRecMSISetup."PR Material Nos.", OldNoSeries, "No. Series") then begin
+            "Purchase Req. No." := Noseries.GetNextNo("No. Series", WorkDate, true);  // Manual OK
+            exit(true);
+        end;
     end;
 
     procedure visible1(): Boolean

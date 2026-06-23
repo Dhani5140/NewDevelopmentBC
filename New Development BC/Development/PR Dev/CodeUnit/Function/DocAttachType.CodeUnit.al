@@ -12,7 +12,7 @@ codeunit 50400 DocAttachType
                   tabledata "Vensel Header" = RIMD;
 
 
-    [EventSubscriber(ObjectType::Page, 1174, 'OnBeforeDrillDown', '', false, false)]
+    [EventSubscriber(ObjectType::Page, 1178, 'OnAfterGetRecRefFail', '', false, false)]
     local procedure OnBeforeDrillDown(DocumentAttachment: Record "Document Attachment"; var RecRef: RecordRef)
     var
         PBHeader: Record PBHeader;

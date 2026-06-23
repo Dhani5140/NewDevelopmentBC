@@ -48,30 +48,37 @@ pageextension 80140 "Vendor Card Ext" extends "Vendor Card"
             }
         }
 
-        addafter("Tax Module")
+        // addafter("Tax Module")
+        // {
+        //     group(WHT)
+        //     {
+        //         field("WHT Business Posting Group"; rec."WHT Business Posting Group")
+        //         {
+
+        //         }
+        //         field("WHT Posting Group"; rec."WHT Posting Group")
+        //         {
+
+        //         }
+        //         field("WHT Product Posting Group"; rec."WHT Product Posting Group")
+        //         {
+
+        //         }
+        //         field("Apply WHT"; rec."Apply WHT")
+        //         {
+        //             ApplicationArea = All;
+        //         }
+        //         field("WHT Code"; rec."WHT Code")
+        //         {
+        //             ApplicationArea = All;
+        //         }
+        //     }
+        // }
+        addafter("VAT Bus. Posting Group")
         {
-            group(WHT)
+            field("WHT Business Posting Group"; Rec."WHT Business Posting Group")
             {
-                field("WHT Business Posting Group"; rec."WHT Business Posting Group")
-                {
-
-                }
-                field("WHT Posting Group"; rec."WHT Posting Group")
-                {
-
-                }
-                field("WHT Product Posting Group"; rec."WHT Product Posting Group")
-                {
-
-                }
-                field("Apply WHT"; rec."Apply WHT")
-                {
-                    ApplicationArea = All;
-                }
-                field("WHT Code"; rec."WHT Code")
-                {
-                    ApplicationArea = All;
-                }
+                ApplicationArea = all;
             }
         }
     }

@@ -42,6 +42,10 @@ table 70002 MiiTabScheduleLine
         {
 
         }
+        field(8; CustLedgerNo; Code[20])
+        {
+            TableRelation = "Cust. Ledger Entry"."Document No.";
+        }
     }
 
     keys

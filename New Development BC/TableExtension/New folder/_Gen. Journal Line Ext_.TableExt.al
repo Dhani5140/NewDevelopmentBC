@@ -71,7 +71,13 @@ tableextension 80108 "Gen. Journal Line Ext" extends "Gen. Journal Line"
             Caption = 'Actual Vendor No.';
             TableRelation = Vendor;
         }
-        field(28047; "WHT Payment"; Boolean)
+        field(50027; "WHT Amount"; Decimal)
+        {
+        }
+        field(50028; "Quantity FA"; Decimal)
+        {
+        }
+        field(50029; "WHT Payment"; Boolean)
         {
             Caption = 'WHT Payment';
 
@@ -82,19 +88,19 @@ tableextension 80108 "Gen. Journal Line Ext" extends "Gen. Journal Line"
                     "WHT Payment" := false;
             end;
         }
-        field(28046; "Certificate Printed"; Boolean)
+        field(50030; "Certificate Printed"; Boolean)
         {
             Caption = 'Certificate Printed';
         }
-        field(28049; "Is WHT"; Boolean)
+        field(50031; "Is WHT"; Boolean)
         {
             Caption = 'Is WHT';
         }
-        field(28044; "WHT Report Line No."; Code[20])
+        field(50032; "WHT Report Line No."; Code[20])
         {
             Caption = 'WHT Report Line No.';
         }
-        field(28045; "Skip WHT"; Boolean)
+        field(50033; "Skip WHT"; Boolean)
         {
             Caption = 'Skip WHT';
         }

@@ -3,9 +3,10 @@ page 51134 "WHT Entries"
     PageType = List;
     ApplicationArea = All;
     UsageCategory = Lists;
-    SourceTable = "WHT Entries1";
+    SourceTable = "WHT Entries";
     InsertAllowed = false;
     DeleteAllowed = false;
+    Editable = false;
 
     layout
     {
@@ -42,6 +43,18 @@ page 51134 "WHT Entries"
                 {
                     ApplicationArea = all;
                     Editable = false;
+                }
+                field(Base; Rec.Base)
+                {
+                    ApplicationArea = all;
+                }
+                field(Amount; Rec.Amount)
+                {
+                    ApplicationArea = all;
+                }
+                field(Billtopay; Rec.Billtopay)
+                {
+                    ApplicationArea = all;
                 }
             }
         }

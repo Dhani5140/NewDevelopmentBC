@@ -6,7 +6,7 @@ pageextension 60102 Budget extends Budget
         {
             field(status; status)
             {
-
+                ApplicationArea = all;
             }
         }
     }

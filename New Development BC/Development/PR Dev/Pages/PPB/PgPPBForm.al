@@ -88,7 +88,7 @@ page 60109 "PPBForm"
         }
         area(factboxes)
         {
-            part("Attached Documents"; "Document Attachment Factbox")
+            part("Attached Documents"; "Doc. Attachment List Factbox")
             {
                 Caption = 'Attachments';
                 ApplicationArea = All;

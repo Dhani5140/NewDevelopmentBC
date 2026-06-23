@@ -164,6 +164,29 @@ codeunit 80103 "RFQ Function"
         END;
     end;
 
+    // Tambahkan di dalam codeunit 80103 "RFQ Function"
+    // Letakkan berdekatan dengan procedure check lainnya
+
+    procedure checkVendorListNotEmpty(RFQNo: Code[20])
+    var
+        lRecRFQVendor: Record "RFQ Vendor List";
+    begin
+        lRecRFQVendor.RESET();
+        lRecRFQVendor.SETRANGE("RFQ No.", RFQNo);
+        IF NOT lRecRFQVendor.FINDFIRST() THEN
+            ERROR('RFQ belum memiliki Vendor. Tambahkan Vendor terlebih dahulu sebelum Release.');
+    end;
+
+    procedure checkRFQLineNotEmpty(RFQNo: Code[20])
+    var
+        lRecRFQLine: Record "RFQ Line";
+    begin
+        lRecRFQLine.RESET();
+        lRecRFQLine.SETRANGE("RFQ No.", RFQNo);
+        IF NOT lRecRFQLine.FINDFIRST() THEN
+            ERROR('RFQ tidak memiliki Line Item. Tambahkan item terlebih dahulu.');
+    end;
+
     procedure checkRFQLinehasPO(RFQNo: Code[20]; RFQLineNo: Integer; msgErr: Text)
     var
         lRecRFQLine: Record "RFQ Line";
@@ -380,14 +403,54 @@ codeunit 80103 "RFQ Function"
         END;
     end;
 
+    // procedure CreateRFQLine_PR(ParPRLine: Record "PR Material Line"; DocNo: Code[20])
+    // var
+    //     lrecRFQLine: Record "RFQ Line";
+    // begin
+    //     lrecRFQLine.Init();
+    //     lrecRFQLine."RFQ No." := DocNo;
+    //     lrecRFQLine."Line No." := getLastLineNoRFQ(DocNo);
+    //     lrecRFQLine.INSERT(TRUE);
+    //     lrecRFQLine.Type := lrecRFQLine.Type::Item;
+    //     lrecRFQLine.Validate("Group Line No.", lrecRFQLine."Line No.");
+    //     lrecRFQLine.Validate("No.", ParPRLine."Item No.");
+    //     lrecRFQLine.Validate("Description", ParPRLine."Description");
+    //     lrecRFQLine.Validate(Quantity, ParPRLine."Outstanding Quantity");
+    //     lrecRFQLine.Validate("Original Qty PR", ParPRLine."Outstanding Quantity");
+    //     lrecRFQLine.Validate("Outstanding Quantity", ParPRLine."Outstanding Quantity");
+    //     lrecRFQLine.Validate("Location Code", ParPRLine."Location Code");
+    //     lrecRFQLine.Validate("Unit of Measure", ParPRLine."Unit of Measure");
+    //     lrecRFQLine.Validate("Part No.", ParPRLine."Part No.");
+    //     lrecRFQLine.Validate("Purchase Req. No.", ParPRLine."Purchase Req. No.");
+    //     lrecRFQLine.Validate("Purchase Req. Line No.", ParPRLine."Line No.");
+    //     lrecRFQLine.Validate("Material Req. No.", ParPRLine."Material Req. No.");
+    //     lrecRFQLine.Validate("Material Req. Line No.", ParPRLine."Material Req. Line No.");
+    //     lrecRFQLine.VALIDATE("Shortcut Dimension 1 Code", ParPRLine."Shortcut Dimension 1 Code");
+    //     lrecRFQLine.VALIDATE("Shortcut Dimension 2 Code", ParPRLine."Shortcut Dimension 2 Code");
+    //     lrecRFQLine.VALIDATE("Shortcut Dimension 3 Code", ParPRLine."Shortcut Dimension 3 Code");
+    //     lrecRFQLine.VALIDATE("Shortcut Dimension 4 Code", ParPRLine."Shortcut Dimension 4 Code");
+    //     lrecRFQLine.VALIDATE("Shortcut Dimension 5 Code", ParPRLine."Shortcut Dimension 5 Code");
+    //     lrecRFQLine.VALIDATE("Shortcut Dimension 6 Code", ParPRLine."Shortcut Dimension 6 Code");
+    //     lrecRFQLine.VALIDATE("Shortcut Dimension 7 Code", ParPRLine."Shortcut Dimension 7 Code");
+    //     lrecRFQLine.VALIDATE("Shortcut Dimension 8 Code", ParPRLine."Shortcut Dimension 8 Code");
+    //     lrecRFQLine.VALIDATE(Remarks, ParPRLine.Remarks);
+    //     lrecRFQLine."from PR" := TRUE;
+    //     lrecRFQLine.MODIFY(TRUE);
+    //     insertRFQLineDetailsfromRFQLine(lrecRFQLine);
+    //     gCUPRFunct.updOutstandingQtyPR(ParPRLine, lrecRFQLine.RecordID, ParPRLine."Outstanding Quantity");
+    // end;
     procedure CreateRFQLine_PR(ParPRLine: Record "PR Material Line"; DocNo: Code[20])
     var
         lrecRFQLine: Record "RFQ Line";
+        PRHeader: Record "PR Material Header";
+        RFQVendor: Record "RFQ Vendor List";
+        Vendor: Record Vendor;
     begin
         lrecRFQLine.Init();
         lrecRFQLine."RFQ No." := DocNo;
         lrecRFQLine."Line No." := getLastLineNoRFQ(DocNo);
         lrecRFQLine.INSERT(TRUE);
+
         lrecRFQLine.Type := lrecRFQLine.Type::Item;
         lrecRFQLine.Validate("Group Line No.", lrecRFQLine."Line No.");
         lrecRFQLine.Validate("No.", ParPRLine."Item No.");
@@ -413,9 +476,43 @@ codeunit 80103 "RFQ Function"
         lrecRFQLine.VALIDATE(Remarks, ParPRLine.Remarks);
         lrecRFQLine."from PR" := TRUE;
         lrecRFQLine.MODIFY(TRUE);
+
         insertRFQLineDetailsfromRFQLine(lrecRFQLine);
         gCUPRFunct.updOutstandingQtyPR(ParPRLine, lrecRFQLine.RecordID, ParPRLine."Outstanding Quantity");
+
+
+        // if PRHeader.Get(ParPRLine."Purchase Req. No.") then
+        //     if (PRHeader."Vendor No" <> '') and not RFQVendor.Get(DocNo, PRHeader."Vendor No") then begin
+        //         RFQVendor.Init();
+        //         RFQVendor."RFQ No." := DocNo;
+        //         RFQVendor."Vendor No." := PRHeader."Vendor No";
+        //         if Vendor.Get(PRHeader."Vendor No") then
+        //             RFQVendor."Vendor Name" := Vendor.Name;
+        //         RFQVendor.Insert(true);
+        //     end;
+
+        if PRHeader.Get(ParPRLine."Purchase Req. No.") then
+            if (PRHeader."Vendor No" <> '') then begin
+
+                // Gunakan SetRange karena Vendor No. bukan Primary Key ke-2
+                RFQVendor.Reset();
+                RFQVendor.SetRange("RFQ No.", DocNo);
+                RFQVendor.SetRange("Vendor No.", PRHeader."Vendor No");
+
+                if not RFQVendor.FindFirst() then begin
+                    RFQVendor.Init();
+                    RFQVendor."RFQ No." := DocNo;
+                    RFQVendor."Vendor No." := PRHeader."Vendor No";
+                    if Vendor.Get(PRHeader."Vendor No") then
+                        RFQVendor."Vendor Name" := Vendor.Name;
+
+                    // Asumsi: Entry No. RFQ Vendor diset AutoIncrement di tabelnya
+                    RFQVendor.Insert(true);
+                end;
+            end;
+
     end;
+
 
     procedure splitRFQLine(var parRFQLine: Record "RFQ Line");
     var
@@ -792,36 +889,150 @@ codeunit 80103 "RFQ Function"
 
 
     //Create PO
-    procedure SendEMailWithAttachment(EmailAddr: text[1024]; DocNo: code[50])
+    // procedure SendEMailWithAttachment(EmailAddr: text[1024]; DocNo: code[50])
+    // var
+    //     Email: Codeunit Email;
+    //     EmailMessage: Codeunit "Email Message";
+    //     Cancelled: Boolean;
+    //     MailSent: Boolean;
+    //     Selection: Integer;
+    //     OptionsLbl: Label 'Send,Open Preview';
+    //     ListTo: List of [Text];
+    //     lrecRFQ: Record "RFQ Header";
+    //     TempBlob: Codeunit "Temp Blob";
+    //     InStr: Instream;
+    //     OutStr: OutStream;
+    //     RFQRecRef: RecordRef;
+    // begin
+    //     ListTo.Add(EmailAddr);
+    //     EmailMessage.Create(ListTo, 'This is Request For Quotation', 'This is sample email body', true);
+    //     Cancelled := false;
+    //     TempBlob.CreateOutStream(OutStr);
+    //     lrecRFQ.RESET();
+    //     lrecRFQ.SetFilter("RFQ No.", DocNo);
+    //     if lrecRFQ.FINDSET then begin
+    //         RFQRecRef.GetTable(lrecRFQ);
+    //         // Report.saveas(Report::"RFQ Format", DocNo, ReportFormat::Pdf, OutStr, RFQRecRef);
+    //     end;
+    //     TempBlob.CreateInStream(InStr);
+    //     EmailMessage.Create(EmailAddr, 'Request For Quotation', 'Hi, this is a request for quotation.');
+    //     EmailMessage.AddAttachment('RFQ.pdf', 'PDF', InStr);
+    //     MailSent := Email.Send(EmailMessage, Enum::"Email Scenario"::Default);
+    // end;
+
+    // procedure SendEMailWithAttachment(EmailAddr: Text[1024]; DocNo: Code[50]; VendEntryNo: Integer)
+    // var
+    //     Email: Codeunit Email;
+    //     EmailMessage: Codeunit "Email Message";
+    //     TempBlob: Codeunit "Temp Blob";
+    //     InStr: InStream;
+    //     OutStr: OutStream;
+    //     lrecRFQ: Record "RFQ Header";
+    //     RFQRecRef: RecordRef;
+    //     RFQVendor: Record "RFQ Vendor List";
+    //     MailSent: Boolean;
+    // begin
+    //     // Get vendor details untuk nama & filter
+    //     RFQVendor.Reset();
+    //     RFQVendor.SetRange("RFQ No.", DocNo);
+    //     RFQVendor.SetRange("Entry No. RFQ Vendor", VendEntryNo);
+    //     if not RFQVendor.FindFirst() then
+    //         Error('Vendor Entry No. %1 tidak ditemukan untuk RFQ %2.', VendEntryNo, DocNo);
+
+    //     // Cari RFQ Header
+    //     lrecRFQ.Reset();
+    //     lrecRFQ.SetRange("RFQ No.", DocNo);
+    //     if not lrecRFQ.FindFirst() then
+    //         Error('RFQ No. %1 tidak ditemukan.', DocNo);
+
+    //     // Generate PDF PER VENDOR (report auto-filter via dataitem link)
+    //     TempBlob.CreateOutStream(OutStr);
+    //     RFQRecRef.GetTable(lrecRFQ);
+    //     Report.SaveAs(Report::RFQ_Printour, '', ReportFormat::Pdf, OutStr, RFQRecRef);
+
+    //     // Buat email personal
+    //     TempBlob.CreateInStream(InStr);
+    //     EmailMessage.Create(EmailAddr,
+    //         'Request For Quotation - ' + DocNo + ' (' + RFQVendor."Vendor Name" + ')',
+    //         'Bersama ini RFQ untuk Anda terlampir.' +
+    //         '\nMohon konfirmasi penawaran sesuai spesifikasi.' +
+    //         '\n\nTerima kasih.',
+    //         true);
+    //     EmailMessage.AddAttachment('RFQ_' + DocNo + '_' + RFQVendor."Vendor No." + '.pdf', 'application/pdf', InStr);
+
+    //     // Kirim & validasi
+    //     MailSent := Email.Send(EmailMessage, Enum::"Email Scenario"::Default);
+    //     if not MailSent then
+    //         Error('Gagal kirim email ke %1.', EmailAddr);
+    //     Message('Email RFQ terkirim ke %1 (%2).', EmailAddr, RFQVendor."Vendor Name");
+    // end;
+
+    procedure SendEMailWithAttachment(EmailAddr: Text[1024]; DocNo: Code[20]; EntryNoVendor: Integer)
     var
         Email: Codeunit Email;
         EmailMessage: Codeunit "Email Message";
-        Cancelled: Boolean;
-        MailSent: Boolean;
-        Selection: Integer;
-        OptionsLbl: Label 'Send,Open Preview';
-        ListTo: List of [Text];
-        lrecRFQ: Record "RFQ Header";
         TempBlob: Codeunit "Temp Blob";
-        InStr: Instream;
+        InStr: InStream;
         OutStr: OutStream;
+        lrecRFQ: Record "RFQ Header";
+        lrecVendor: Record "RFQ Vendor List";
+        RFQReport: Report RFQ_Printour;
         RFQRecRef: RecordRef;
+        MailSent: Boolean;
     begin
-        ListTo.Add(EmailAddr);
-        EmailMessage.Create(ListTo, 'This is Request For Quotation', 'This is sample email body', true);
-        Cancelled := false;
+        // Validasi RFQ Header
+        if not lrecRFQ.Get(DocNo) then
+            Error('RFQ No. %1 tidak ditemukan.', DocNo);
+
+        if lrecRFQ.Status <> lrecRFQ.Status::"Send To Vendor" then
+            Error('RFQ harus berstatus Send To Vendor sebelum kirim email.');
+
+        // Validasi vendor
+        if not lrecVendor.Get(DocNo, EntryNoVendor) then
+            Error('Vendor tidak ditemukan untuk RFQ %1.', DocNo);
+
+        if EmailAddr = '' then
+            Error('Vendor %1 tidak memiliki email.', lrecVendor."Vendor No.");
+
+        // Generate PDF khusus untuk vendor ini saja
         TempBlob.CreateOutStream(OutStr);
-        lrecRFQ.RESET();
-        lrecRFQ.SetFilter("RFQ No.", DocNo);
-        if lrecRFQ.FINDSET then begin
-            RFQRecRef.GetTable(lrecRFQ);
-            // Report.saveas(Report::"RFQ Format", DocNo, ReportFormat::Pdf, OutStr, RFQRecRef);
-        end;
+
+        // Set filter: hanya RFQ ini
+        lrecRFQ.SetRange("RFQ No.", DocNo);
+
+        // Set filter vendor agar PDF hanya berisi 1 vendor
+        RFQReport.SetVendorFilter(lrecVendor."Vendor No.");
+        RFQReport.SetTableView(lrecRFQ);
+        RFQRecRef.GetTable(lrecRFQ);
+
+        // FIXED SaveAs: correct order (Text, ReportFormat, var OutStr, RecordRef)
+        RFQReport.SaveAs('', ReportFormat::Pdf, OutStr, RFQRecRef);
+
+        // Buat email dengan attachment PDF vendor ini
         TempBlob.CreateInStream(InStr);
-        EmailMessage.Create(EmailAddr, 'Request For Quotation', 'Hi, this is a request for quotation.');
-        EmailMessage.AddAttachment('RFQ.pdf', 'PDF', InStr);
+        EmailMessage.Create(
+            EmailAddr,
+            'Request For Quotation - ' + DocNo,
+            'Yth. ' + lrecVendor."Vendor Name" + ',<br><br>' +
+            'Bersama ini kami sampaikan <b>Request For Quotation</b> No. <b>' + DocNo + '</b>.<br>' +
+            'Mohon konfirmasi penawaran harga sesuai dokumen terlampir.<br><br>' +
+            'Terima kasih.',
+            true
+        );
+        EmailMessage.AddAttachment(
+            'RFQ_' + DocNo + '_' + lrecVendor."Vendor No." + '.pdf',
+            'application/pdf',
+            InStr
+        );
+
         MailSent := Email.Send(EmailMessage, Enum::"Email Scenario"::Default);
+        if not MailSent then
+            Error('Email gagal dikirim ke %1.', EmailAddr);
+
+        Message('Email berhasil dikirim ke %1 untuk vendor %2.',
+                EmailAddr, lrecVendor."Vendor Name");
     end;
+
 
     local procedure getLastLineNoRFQ(DocNo: Code[20]): Integer
     var

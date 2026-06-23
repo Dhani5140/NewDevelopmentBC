@@ -41,37 +41,35 @@ codeunit 60101 GetPpbLine
         if IsHandled then
             exit;
 
-        with ppbli2 do begin
-            SetFilter("No.", rfqhead."No.PPB");
-            OnCreateInvLinesOnBeforeFind(ppbli2, rfqhead);
-            if Find('-') then begin
-                rfqline.LockTable();
-                rfqline.SetRange(rfqline."No.", rfqhead."No.");
-                rfqline.SetRange(rfqline."PPB Document No.", rfqhead."No.PPB");
-                rfqline."No." := rfqhead."No.";
-                rfqline."PPB Document No." := rfqhead."No.PPB";
+        ppbli2.SetFilter("No.", rfqhead."No.PPB");
+        OnCreateInvLinesOnBeforeFind(ppbli2, rfqhead);
+        if ppbli2.Find('-') then begin
+            rfqline.LockTable();
+            rfqline.SetRange(rfqline."No.", rfqhead."No.");
+            rfqline.SetRange(rfqline."PPB Document No.", rfqhead."No.PPB");
+            rfqline."No." := rfqhead."No.";
+            rfqline."PPB Document No." := rfqhead."No.PPB";
 
 
 
-                OnBeforeInsertLines(rfqhead, rfqline);
+            OnBeforeInsertLines(rfqhead, rfqline);
 
-                repeat
-                    if rfqhead."No." <> rfqline."No." then begin
-                        rfqhead.get("No.");
-                        if PPBHead."No." <> rfqhead."No.PPB" then begin
-                            Message(
-                              Text000,
-                              rfqhead.FieldCaption("No.PPB"),
-                              rfqhead.TableCaption(), rfqhead."No.",
-                              PPBHead.TableCaption(), PPBHead."No.");
-                            TransferLine := false;
-                        end;
-
+            repeat
+                if rfqhead."No." <> rfqline."No." then begin
+                    rfqhead.get(ppbli2."No.");
+                    if PPBHead."No." <> rfqhead."No.PPB" then begin
+                        Message(
+                          Text000,
+                          rfqhead.FieldCaption("No.PPB"),
+                          rfqhead.TableCaption(), rfqhead."No.",
+                          PPBHead.TableCaption(), PPBHead."No.");
+                        TransferLine := false;
                     end;
 
-                until Next() = 0;
+                end;
 
-            end;
+            until ppbli2.Next() = 0;
+
         end;
     end;
 

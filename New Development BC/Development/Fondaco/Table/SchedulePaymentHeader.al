@@ -65,6 +65,11 @@ table 70001 MiiTabScheduleHeader
         {
             Caption = 'Start Date';
         }
+        field(8; "No."; Code[20])
+        {
+            Caption = 'Bank No.';
+            TableRelation = "Bank Account"."No.";
+        }
     }
 
     keys

@@ -2,7 +2,7 @@ tableextension 51150 sales_reci extends "Sales & Receivables Setup"
 {
     fields
     {
-        field(28040; "Print WHT on Credit Memo"; Boolean)
+        field(50100; "Print WHT on Credit Memo"; Boolean)
         {
             Caption = 'Print WHT on Credit Memo';
         }

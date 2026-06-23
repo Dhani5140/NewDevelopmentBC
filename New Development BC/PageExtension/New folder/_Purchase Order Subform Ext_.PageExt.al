@@ -83,55 +83,48 @@ pageextension 80103 "Purchase Order Subform Ext" extends "Purchase Order Subform
         }
         addafter("Line Amount")
         {
-            field("WHT Code"; rec."WHT Code")
+            // field("WHT Code"; rec."WHT Code")
+            // {
+            //     ApplicationArea = all;
+            // }
+            field("WHT Business Posting Group"; rec."WHT Business Posting Group")
             {
                 ApplicationArea = all;
             }
-            field("WHT Business Posting Group"; rec."WHT Business Posting Group")
-            {
-
-            }
             field("WHT Product Posting Group"; rec."WHT Product Posting Group")
             {
+                ApplicationArea = all;
             }
             field("WHT %"; rec."WHT %")
             {
                 ApplicationArea = all;
-                // trigger OnValidate()
-                // var
-                //     WHTSetupRec: Record "WHT Posting Setup"; // Pastikan ini adalah tabel pengaturan Anda
-                // begin
-                //     // Jika ada perubahan di WHT Business Posting Group atau WHT Product Posting Group
-                //     if WHTSetupRec.Get("WHT Business Posting Group", "WHT Product Posting Group") then begin
-                //         // Set nilai WHT % berdasarkan WHT Posting Setup yang ditemukan
-                //         "WHT %" := WHTSetupRec."WHT %";
-                //     end
-                //     else
-                //         Error('Data tidak ditemukan untuk kombinasi WHT Business Posting Group dan WHT Product Posting Group yang dipilih.');
-                // end;
-
             }
-            field("WHT Absorb Base"; rec."WHT Absorb Base")
+
+            field("Prepayment VAT Identifier"; Rec."Prepayment VAT Identifier")
             {
-
-
+                ApplicationArea = all;
+                Editable = true;
             }
+            // field("WHT Absorb Base"; rec."WHT Absorb Base")
+            // {
+            //     ApplicationArea = all;
+            // }
             field("GL Budget Name"; Rec."GL Budget Name")
             {
-
+                ApplicationArea = All;
             }
 
             field("G/L Account No."; Rec."G/L Account No.")
             {
-
+                ApplicationArea = All;
             }
             field("GL Available Budget"; Rec."GL Available Budget")
             {
-
+                ApplicationArea = All;
             }
             field("GL Budgeted Amount"; Rec."GL Budgeted Amount")
             {
-
+                ApplicationArea = All;
             }
             field("Fixed Asset PR Amount"; Rec."Fixed Asset PR Amount")
             {

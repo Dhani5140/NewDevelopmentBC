@@ -1,4 +1,4 @@
-pageextension 50100 MIIPEextItemList extends "Item List"
+pageextension 50100 MyExtension extends "Item List"
 {
     layout
     {

@@ -42,20 +42,24 @@ table 80105 "RFQ Header"
             trigger OnValidate()
             var
                 lCURFQFunct: Codeunit "RFQ Function";
-                vensel: Record VendorselHead;
             begin
                 Case Status OF
                     Status::Released:
                         IF xRec.Status <> xRec.Status::Released THEN BEGIN
-                            lCURFQFunct.checkRFQLinehasWinner(Rec."RFQ No.");
+                            // JANGAN panggil checkRFQLinehasWinner di sini
+                            // Winner belum dipilih saat Release, ini salah secara bisnis
                         END;
                     Status::Open:
                         BEGIN
-                            IF xRec.Status <> xRec.Status::Open THEN BEGIN
+                            IF xRec.Status <> xRec.Status::Open THEN
                                 lCURFQFunct.checkRFQLinehasPO(Rec."RFQ No.", 0, 'reopen');
-                            END;
                         END;
-
+                    Status::"Send To Vendor":
+                        BEGIN
+                            IF xRec.Status <> xRec.Status::Released THEN
+                                ERROR('Status harus Released sebelum Send To Vendor.');
+                            lCURFQFunct.checkVendorListNotEmpty(Rec."RFQ No.");
+                        END;
                 End;
             end;
         }
@@ -290,18 +294,36 @@ table 80105 "RFQ Header"
             Clustered = true;
         }
     }
+    // trigger OnInsert()
+    // var
+    //     lRecMSISetup: Record "MII Setup";
+    // begin
+    //     if "RFQ No." = '' then begin
+    //         lRecMSISetup.reset();
+    //         IF lRecMSISetup.GET() then begin
+    //             lRecMSISetup.TestField("RFQ Nos.");
+    //         end;
+    //         //NoSeriesMgt.InitSeries(lRecMSISetup."RFQ Nos.", lRecMSISetup."RFQ Nos.", 0D, "RFQ No.", lRecMSISetup."RFQ Nos.");
+    //         NoSeries.AreRelated(lRecMSISetup."RFQ Nos.", lRecMSISetup."RFQ Nos.");
+    //     END;
+    //     "Document Date" := WORKDATE;
+    //     "Created By" := UserId;
+    //     "Created Date" := CurrentDateTime;
+    //     "Last Modified By" := UserId;
+    //     "Last Modified Date" := CurrentDateTime;
+    //     Status := Status::Open;
+    // end;
+
     trigger OnInsert()
     var
         lRecMSISetup: Record "MII Setup";
     begin
         if "RFQ No." = '' then begin
-            lRecMSISetup.reset();
-            IF lRecMSISetup.GET() then begin
-                lRecMSISetup.TestField("RFQ Nos.");
-            end;
-            //NoSeriesMgt.InitSeries(lRecMSISetup."RFQ Nos.", lRecMSISetup."RFQ Nos.", 0D, "RFQ No.", lRecMSISetup."RFQ Nos.");
-            NoSeries.AreRelated(lRecMSISetup."RFQ Nos.", lRecMSISetup."RFQ Nos.");
-        END;
+            lRecMSISetup.Get();
+            lRecMSISetup.TestField("RFQ Nos.");
+            "RFQ No." := NoSeries.GetNextNo(lRecMSISetup."RFQ Nos.", WorkDate);  // update 27.4
+            "No. Series" := lRecMSISetup."RFQ Nos.";
+        end;
         "Document Date" := WORKDATE;
         "Created By" := UserId;
         "Created Date" := CurrentDateTime;
@@ -310,16 +332,33 @@ table 80105 "RFQ Header"
         Status := Status::Open;
     end;
 
+
     trigger OnDelete()
+    // var
+    //     lrecRFQLine: Record "RFQ Line";
+    // begin
+    //     TestField("Status", "Status"::Open);
+    //     lrecRFQLine.RESET();
+    //     lrecRFQLine.SETRANGE("RFQ No.", Rec."RFQ No.");
+    //     IF lrecRFQLine.Find('-') THEN BEGIN
+    //         lrecRFQLine.DELETEALL(TRUE)
+    //     END;
+    // end;
     var
         lrecRFQLine: Record "RFQ Line";
+        lrecRFQVendor: Record "RFQ Vendor List";  // <<< TAMBAH
     begin
-        TestField("Status", "Status"::Open);
+        TestField("Status", "Status"::Open);  // Keep validation
+
+        // Existing: Lines
         lrecRFQLine.RESET();
         lrecRFQLine.SETRANGE("RFQ No.", Rec."RFQ No.");
-        IF lrecRFQLine.Find('-') THEN BEGIN
-            lrecRFQLine.DELETEALL(TRUE)
-        END;
+        IF lrecRFQLine.FIND('-') THEN lrecRFQLine.DELETEALL(TRUE);
+
+        // TAMBAH: Vendors (auto cascade Line Details)
+        lrecRFQVendor.RESET();
+        lrecRFQVendor.SETRANGE("RFQ No.", Rec."RFQ No.");
+        IF lrecRFQVendor.FIND('-') THEN lrecRFQVendor.DELETEALL(TRUE);
     end;
 
     trigger OnModify()
@@ -328,19 +367,33 @@ table 80105 "RFQ Header"
         "Last Modified Date" := CurrentDateTime;
     end;
 
+    // procedure AssistEdit(): Boolean
+    // var
+    //     lRecMSISetup: Record "MII Setup";
+    // begin
+    //     lRecMSISetup.GET;
+    //     lRecMSISetup.TESTFIELD("RFQ Nos.");
+    //     // IF NoSeriesMgt.SelectSeries(lRecMSISetup."RFQ Nos.", xRec."No. Series", Rec."No. Series") THEN BEGIN
+    //     //     NoSeriesMgt.SetSeries(Rec."RFQ No.");
+    //     IF NoSeries.LookupRelatedNoSeries(lRecMSISetup."RFQ Nos.", xRec."No. Series", Rec."No. Series") THEN BEGIN
+    //         NoSeries.GetNextNo(Rec."RFQ No.");
+    //         EXIT(TRUE);
+    //     END;
+    // end;
+
     procedure AssistEdit(): Boolean
     var
         lRecMSISetup: Record "MII Setup";
     begin
-        lRecMSISetup.GET;
-        lRecMSISetup.TESTFIELD("RFQ Nos.");
-        // IF NoSeriesMgt.SelectSeries(lRecMSISetup."RFQ Nos.", xRec."No. Series", Rec."No. Series") THEN BEGIN
-        //     NoSeriesMgt.SetSeries(Rec."RFQ No.");
-        IF NoSeries.LookupRelatedNoSeries(lRecMSISetup."RFQ Nos.", xRec."No. Series", Rec."No. Series") THEN BEGIN
-            NoSeries.GetNextNo(Rec."RFQ No.");
-            EXIT(TRUE);
-        END;
+        lRecMSISetup.Get();
+        lRecMSISetup.TestField("RFQ Nos.");
+
+        if NoSeries.LookupRelatedNoSeries(lRecMSISetup."RFQ Nos.", xRec."No. Series", "No. Series") then begin
+            "RFQ No." := NoSeries.GetNextNo("No. Series", WorkDate, true);  // ← Assign ke RFQ No.!
+            exit(true);
+        end;
     end;
+
 
     procedure updateDocLines(FieldRef: Integer)
     var

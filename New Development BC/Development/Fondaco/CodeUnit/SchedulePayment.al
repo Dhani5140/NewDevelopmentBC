@@ -190,26 +190,12 @@ codeunit 70002 MIICUSchedule
         SH: record "Sales Header";
         SalesLine: Record "Sales Line";
         Prepay: Codeunit Prepay;
+        Header: Record MiiTabScheduleHeader;
     begin
         SH.SetFilter("No.", Line."Document No.");
         SH.SetRange("Document Type", SH."Document Type"::"Blanket Order");
         SH.FindFirst();
-        SH.CalcFields(Amount);
-        SH."Prepayment %" += (Line.Amount / SH.Amount) * 100;
-        SH.Validate("Prepayment %");
-        SH.Modify();
-        Commit();
-        SalesLine.SetFilter("Document No.", Line."Document No.");
-        SalesLine.SetRange("Document Type", SalesLine."Document Type"::"Blanket Order");
-        SalesLine.SetFilter(Type, '<>%1', SalesLine.Type::" ");
-        if SalesLine.FindSet() then begin
-            SalesLine."Prepayment %" := SH."Prepayment %";
-            SalesLine.Validate("Prepayment %");
-            //SalesLine."Prepayment Amount" := Line.Amount;
-            SalesLine.Modify();
-        end;
-        Prepay.Code(SH, 0);
-
+        Prepay.Code(SH, 0, Line);
     end;
 
 
@@ -301,8 +287,10 @@ codeunit 70002 MIICUSchedule
     begin
         Clear(CopyToCompany);
         Companies.Reset();
-        if Page.RunModal(Page::Companies, Companies) = Action::LookupOK then
+        if Page.RunModal(Page::Companies, Companies) = Action::LookupOK then begin
             CopyToCompany := Companies.Name;
+        end;
+
         if CLE.ChangeCompany(CopyToCompany) then begin
             CLE.Init();
             CLE.TransferFields(CustLed);
@@ -329,8 +317,8 @@ codeunit 70002 MIICUSchedule
                     until SourceGLE.Next() = 0;
                 end;
             end;
-            Message('Tranfer data to company %1 success', CopyToCompany);
         end;
+        Message('Tranfer data to company %1 success', CopyToCompany);
     end;
 
     procedure deleteCLE(CustLed: Record "Cust. Ledger Entry")

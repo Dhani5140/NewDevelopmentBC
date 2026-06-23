@@ -25,6 +25,10 @@ page 70001 SchedulePaymentHeader
                 {
                     ApplicationArea = all;
                 }
+                field("No."; Rec."No.")
+                {
+                    ApplicationArea = all;
+                }
                 field("No. of Periods"; Rec."No. of Periods")
                 {
                     ApplicationArea = all;
@@ -64,8 +68,15 @@ page 70001 SchedulePaymentHeader
                         Error('You must specify one or more periods.');
                     end else begin
                         Line.SetRange("Document No.", Rec."Document No.");
+                        Line.SetFilter(Status, '<>%1', Line.Status::Open);
                         if Line.FindSet() then begin
-                            Line.DeleteAll();
+                            Error('You cannot recalculate Line');
+                        end else begin
+                            Line.Reset();
+                            Line.SetRange("Document No.", Rec."Document No.");
+                            if Line.FindSet() then begin
+                                Line.DeleteAll();
+                            end;
                         end;
 
                         schedule.InsertScheduleLine(Rec);
@@ -90,8 +101,6 @@ page 70001 SchedulePaymentHeader
                     if Line.FindSet() then begin
                         schedule.updateprepayment(Line);
                     end;
-                    Line.Status := Line.Status::Invoice;
-                    Line.Modify();
                 end;
             }
         }

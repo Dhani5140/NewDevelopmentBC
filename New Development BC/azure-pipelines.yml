@@ -1,0 +1,61 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+- task: DownloadPackage@1
+  displayName: 'Download AL Compiler'
+  inputs:
+    packageType: upack
+    feed: '9978f587-f726-4bed-b631-c230e8913734/00f4637e-902e-4e2e-9f1c-fa45b1875749'
+    view: 'd3366fe4-605d-420d-a87b-7d15589aaa24'
+    definition: '567a0917-356d-45d7-b3c2-4af89261db3f'
+    version: 0.0.2
+    downloadPath: '$(Pipeline.Workspace)/_packaging/al-compiler'
+
+- task: DownloadPackage@1
+  displayName: 'Download AL Packages'
+  inputs:
+    packageType: upack
+    feed: '9978f587-f726-4bed-b631-c230e8913734/00f4637e-902e-4e2e-9f1c-fa45b1875749'
+    view: 'd3366fe4-605d-420d-a87b-7d15589aaa24'
+    definition: '1badf7b0-383a-48fb-8cfd-1fd343779509'
+    version: 0.0.1
+    downloadPath: '$(Pipeline.Workspace)/_packaging/al-packages'
+
+- powershell: |
+   Write-Host "=== STEP 3: COMPILE AL EXTENSION ==="
+   
+   $compilerPath = "$(Pipeline.Workspace)\_packaging\al-compiler\alc.exe"
+   $packagesPath = "$(Pipeline.Workspace)\_packaging\al-packages"
+   $outDir = "$(Build.ArtifactStagingDirectory)"
+   
+   if (-not (Test-Path $compilerPath)) {
+       throw "alc.exe NOT FOUND at $compilerPath"
+   }
+   
+   Write-Host "ALC FOUND: $compilerPath"
+   
+   # Compile (NO fixed output filename)
+   & $compilerPath `
+     /project:"$(Build.SourcesDirectory)" `
+     /packagecachepath:"$packagesPath" `
+     /out:"$outDir"
+   
+   # Validate result
+   $appFiles = Get-ChildItem $outDir -Filter *.app
+   if (-not $appFiles) {
+       throw "BUILD FAILED – no .app generated"
+   }
+   
+   Write-Host "GENERATED APP FILE(S):"
+   $appFiles | ForEach-Object { Write-Host " - $($_.Name)" }
+  displayName: 'PowerShell Script'
+
+- task: PublishPipelineArtifact@1
+  displayName: 'Publish Pipeline Artifact'
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)'
+    artifact: 'bc-app'

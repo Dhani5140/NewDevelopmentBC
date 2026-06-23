@@ -64,7 +64,6 @@ page 50159 "Vendor Select Header"
                 {
                     ApplicationArea = all;
                     Caption = 'Material No';
-
                 }
                 // field("Total Amount"; Rec."Total Amount")
                 // {
@@ -149,7 +148,7 @@ page 50159 "Vendor Select Header"
         }
         area(FactBoxes)
         {
-            part("Document Attachment FactBox"; "Document Attachment FactBox")
+            part("Document Attachment FactBox"; "Doc. Attachment List Factbox")
             {
                 ApplicationArea = All;
                 Caption = 'Attachments';
@@ -246,6 +245,7 @@ page 50159 "Vendor Select Header"
                         // IF rec."Over Budget" AND (Rec."Over Budget Approved" = FALSE) then begin
                         //     ERROR('Please Request Approval first because there is line over budget.');
                         // end;
+
                         IF Rec.Status IN [Rec.Status::Open] = FALSE THEN ERROR('Status must be open to Release');
                         IF NOT gCUApproval_RFQ.IsEnabled_Custom2(Rec) THEN BEGIN
                             Rec.VALIDATE("Status", Rec."Status"::Released);
@@ -293,7 +293,6 @@ page 50159 "Vendor Select Header"
                     lRec.RESET;
                     lRec.SETRANGE(lRec."RFQ No.", Rec."RFQ No.");
                     Report.RUN(Report::"RFQ Printout", true, false, lRec)
-
                 end;
             }
             // action("Get Purchase Req.")
@@ -434,7 +433,6 @@ page 50159 "Vendor Select Header"
                     VAR
                         mr: Record "Material Req. Line";
                         line: Record "RFQ Line";
-
                     begin
                         line.SetRange("Material Req. No.", mr."Material Req. No.");
                         page.run(PAGE::"Material Request Lines", line);
@@ -448,7 +446,6 @@ page 50159 "Vendor Select Header"
                     trigger OnAction()
                     VAR
                         mr: Record "PR Material Line";
-
                     begin
                         mr.SetRange("Purchase Req. No.", Rec."Purchase Request No.");
                         page.run(PAGE::"PR Material Lines", mr);
@@ -480,9 +477,7 @@ page 50159 "Vendor Select Header"
                         page.run(PAGE::"Purchase Lines", mr);
                     end;
                 }
-
             }
-
         }
     }
     trigger OnOpenPage()

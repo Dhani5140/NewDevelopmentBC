@@ -75,7 +75,7 @@ page 60105 "PB Header (Warehouse)"
         }
         area(FactBoxes)
         {
-            part("Attached Documents"; "Document Attachment Factbox")
+            part("Attached Documents"; "Doc. Attachment List Factbox")
             {
                 Caption = 'Attachment';
                 SubPageLink = "Table ID" = const(60100),

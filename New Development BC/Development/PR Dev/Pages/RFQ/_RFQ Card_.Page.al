@@ -164,7 +164,7 @@ page 80109 "RFQ Card"
         }
         area(FactBoxes)
         {
-            part("Document Attachment FactBox"; "Document Attachment FactBox")
+            part("Document Attachment FactBox"; "Doc. Attachment List Factbox")
             {
                 ApplicationArea = All;
                 Caption = 'Attachments';
@@ -257,24 +257,98 @@ page 80109 "RFQ Card"
                     Image = ReleaseDoc;
                     Visible = Showhide;
 
+                    // trigger OnAction()
+                    // begin
+                    //     // Rec.TestField("Status", Rec."Status"::"Pending Approval");
+                    //     //Rec.CalcFields("Over Budget");
+                    //     // IF rec."Over Budget" AND (Rec."Over Budget Approved" = FALSE) then begin
+                    //     //     ERROR('Please Request Approval first because there is line over budget.');
+                    //     // end;
+                    //     // IF Rec.Status IN [Rec.Status::Open] = FALSE THEN ERROR('Status must be open to Release');
+                    //     // IF NOT gCUApproval_RFQ.IsEnabled_Custom(Rec) THEN BEGIN
+                    //     //     Rec.VALIDATE("Status", Rec."Status"::Released);
+                    //     //     CurrPage.UPDATE();
+                    //     //     Message('Document has been released');
+                    //     // END
+                    //     // ELSE BEGIN
+                    //     //     ERROR('Workflow for this record data type is enabled, cannot manually release');
+                    //     // END;
+                    //     IF Rec.Status <> Rec.Status::Open THEN  // 
+                    //         ERROR('Status must be Open to Release');
+                    //     IF NOT gCUApproval_RFQ.IsEnabled_Custom(Rec) THEN BEGIN
+                    //         Rec.VALIDATE("Status", Rec.Status::Released);
+                    //         CurrPage.UPDATE();
+                    //         Message('Document has been released');
+                    //     END ELSE
+                    //         ERROR('Workflow enabled, cannot manually release');
+                    // end;
+
                     trigger OnAction()
                     begin
-                        // Rec.TestField("Status", Rec."Status"::"Pending Approval");
-                        //Rec.CalcFields("Over Budget");
-                        // IF rec."Over Budget" AND (Rec."Over Budget Approved" = FALSE) then begin
-                        //     ERROR('Please Request Approval first because there is line over budget.');
-                        // end;
-                        IF Rec.Status IN [Rec.Status::Open] = FALSE THEN ERROR('Status must be open to Release');
+                        IF Rec.Status <> Rec.Status::Open THEN
+                            ERROR('Status must be Open to Release.');
+
+
+                        gCURFQunct.checkRFQLineNotEmpty(Rec."RFQ No.");
+
+
+                        gCURFQunct.checkVendorListNotEmpty(Rec."RFQ No.");
+
+
+
                         IF NOT gCUApproval_RFQ.IsEnabled_Custom(Rec) THEN BEGIN
-                            Rec.VALIDATE("Status", Rec."Status"::Released);
+                            Rec.VALIDATE(Status, Rec.Status::Released);
                             CurrPage.UPDATE();
-                            Message('Document has been released');
-                        END
-                        ELSE BEGIN
-                            ERROR('Workflow for this record data type is enabled, cannot manually release');
-                        END;
+                            Message('Document has been released.');
+                        END ELSE
+                            ERROR('Workflow enabled, cannot manually release.');
+                    end;
+
+                }
+                action("Cleanup Stuck RFQ")
+                {
+                    ApplicationArea = All;
+                    Promoted = true;
+                    PromotedCategory = Process;
+                    Image = Delete;
+
+                    trigger OnAction()
+                    var
+                        RFQLine: Record "RFQ Line";
+                        RFQVendor: Record "RFQ Vendor List";
+                        RFQLineDet: Record "RFQ Line Details";
+                        RFQNo: Code[20];
+                    begin
+                        RFQNo := Rec."RFQ No.";
+
+                        // 1. Reset Winners
+                        RFQLine.SetRange("RFQ No.", RFQNo);
+                        if RFQLine.FindSet(true) then
+                            repeat
+                                RFQLine.Validate("Winner RFQ Line Details", 0);
+                                RFQLine.Modify(true);
+                            until RFQLine.Next() = 0;
+
+                        // 2. Hapus non-winner Vendors
+                        RFQVendor.SetRange("RFQ No.", RFQNo);
+                        RFQVendor.SetRange("Check Win", false);
+                        if not RFQVendor.IsEmpty then
+                            RFQVendor.DeleteAll(true);
+
+                        // 3. Hapus orphan Line Details
+                        RFQLineDet.SetRange("RFQ No.", RFQNo);
+                        if not RFQLineDet.IsEmpty then
+                            RFQLineDet.DeleteAll(true);
+
+                        // 4. Reopen Header
+                        Rec.Validate(Status, Rec.Status::Open);
+                        Rec.Modify(true);
+
+                        Message('Cleanup selesai! %1 bersih. Bisa Release.', RFQNo);
+                        CurrPage.Update(false);
                     end;
                 }
+
                 action("Send To Vendor")
                 {
                     ApplicationArea = All;
@@ -284,17 +358,25 @@ page 80109 "RFQ Card"
 
 
                     trigger OnAction()
-                    begin
+                    // begin
 
-                        IF Rec.Status IN [Rec.Status::Open] = FALSE THEN ERROR('Status must be open to Release');
-                        IF NOT gCUApproval_RFQ.IsEnabled_Custom(Rec) THEN BEGIN
-                            Rec.VALIDATE("Status", Rec."Status"::"Send To Vendor");
-                            CurrPage.UPDATE();
-                            Message('Document has been Send To Vendor');
-                        END
-                        ELSE BEGIN
-                            ERROR('Workflow for this record data type is enabled, cannot manually release');
-                        END;
+                    //     IF Rec.Status IN [Rec.Status::Open] = FALSE THEN ERROR('Status must be open to Release');
+                    //     IF NOT gCUApproval_RFQ.IsEnabled_Custom(Rec) THEN BEGIN
+                    //         Rec.VALIDATE("Status", Rec."Status"::"Send To Vendor");
+                    //         CurrPage.UPDATE();
+                    //         Message('Document has been Send To Vendor');
+                    //     END
+                    //     ELSE BEGIN
+                    //         ERROR('Workflow for this record data type is enabled, cannot manually release');
+                    //     END;
+                    // end;
+
+                    begin
+                        IF Rec.Status <> Rec.Status::Released THEN  // 
+                            ERROR('Status must be Released to Send To Vendor');  // 
+                        Rec.VALIDATE("Status", Rec.Status::"Send To Vendor");
+                        CurrPage.UPDATE();
+                        Message('Document has been sent to Vendor');
                     end;
                 }
 
@@ -452,15 +534,31 @@ page 80109 "RFQ Card"
                 Image = CreateDocument;
                 Visible = Showhide;
 
+                // trigger OnAction()
+                // var
+                //     lCURFQFunction: Codeunit "RFQ Function";
+                // begin
+                //     CurrPage.UPDATE();
+                //     IF NOT (Rec.Status IN [Rec.Status::Released, Rec.Status::Processed]) THEN ERROR('Status must be released or process to create purchase order');
+                //     lCURFQFunction.createPOHeader_RFQ(Rec);
+                //     CurrPage.UPDATE();
+                // end;
                 trigger OnAction()
                 var
                     lCURFQFunction: Codeunit "RFQ Function";
                 begin
+                    IF NOT (Rec.Status IN [Rec.Status::Released, Rec.Status::Processed]) THEN
+                        ERROR('Status must be Released or Processed to create PO.');
+
+                    // Validasi winner baru dicek di sini, bukan di Release
+                    gCURFQunct.checkRFQLinehasWinner(Rec."RFQ No.");
+
                     CurrPage.UPDATE();
-                    IF NOT (Rec.Status IN [Rec.Status::Released, Rec.Status::Processed]) THEN ERROR('Status must be released or process to create purchase order');
                     lCURFQFunction.createPOHeader_RFQ(Rec);
                     CurrPage.UPDATE();
                 end;
+
+
             }
         }
         area(Navigation)

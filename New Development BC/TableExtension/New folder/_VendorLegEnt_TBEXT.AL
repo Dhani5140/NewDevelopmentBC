@@ -2,11 +2,11 @@ tableextension 51143 VenLedEnt extends "Vendor Ledger Entry"
 {
     fields
     {
-        field(28040; "Rem. Amt for WHT"; Decimal)
+        field(50001; "Rem. Amt for WHT"; Decimal)
         {
             Caption = 'Rem. Amt for WHT';
         }
-        field(28041; "Rem. Amt"; Decimal)
+        field(50002; "Rem. Amt"; Decimal)
         {
             Caption = 'Rem. Amt';
         }
