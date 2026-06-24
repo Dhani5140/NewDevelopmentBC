@@ -1,8 +1,13 @@
 {
     "folders": [
+         {
+      "path": "New Development BC"
+        },
         {
             "path": ".AL-Go"
         }
     ],
-    "settings": {}
+    "settings": {
+    "powershell.cwd": ".AL-Go"
+  }
 }
