@@ -32,6 +32,7 @@ page 80115 "PR Material Lines"
                     ApplicationArea = All;
                     Editable = FALSE;
                 }
+
                 field("Unit of Measure Code"; Rec."Unit of Measure")
                 {
                     ApplicationArea = All;

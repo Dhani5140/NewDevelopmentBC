@@ -7,7 +7,7 @@ codeunit 80102 "PR Material Function"
     procedure MANDATORYPRHEADER(PRHRADER: Record "PR Material Header")
     var
     BEGIN
-        PRHRADER.TestField("Vendor No");
+        //PRHRADER.TestField("Vendor No");
 
     END;
     //Check
@@ -209,6 +209,62 @@ codeunit 80102 "PR Material Function"
         IF PurchLineView.FIND('-') THEN Page.RUN(Page::"Purchase Lines", PurchLineView);
     end;
 
+    // New Replacement PR
+    procedure CreateReplacementPR(var OldPRHeader: Record "PR Material Header")
+    var
+        NewPRHeader: Record "PR Material Header";
+        OldPRLine: Record "PR Material Line";
+        NewPRLine: Record "PR Material Line";
+    begin
+        // 1. Validasi: PR Lama harus sudah Released
+        OldPRHeader.TestField(Status, OldPRHeader.Status::Released);
+
+        // 2. Buat Header PR Baru
+        NewPRHeader.Init();
+        NewPRHeader.Insert(true); // Memanggil trigger OnInsert untuk generate No. PR Baru
+
+        // 3. Salin data penting dari Header PR lama
+        NewPRHeader.Validate("Location Code", OldPRHeader."Location Code");
+        NewPRHeader.Validate("Vendor No", OldPRHeader."Vendor No");
+        NewPRHeader.Validate("Shortcut Dimension 1 Code", OldPRHeader."Shortcut Dimension 1 Code");
+        NewPRHeader.Validate("Shortcut Dimension 2 Code", OldPRHeader."Shortcut Dimension 2 Code");
+        NewPRHeader.Remarks := CopyStr('Replacement untuk PR: ' + OldPRHeader."Purchase Req. No.", 1, 250);
+
+        // 4. Set Flag Replacement & Referensi
+        NewPRHeader."PR Type" := NewPRHeader."PR Type"::Replacement;
+        NewPRHeader."Replaced PR No." := OldPRHeader."Purchase Req. No.";
+        NewPRHeader.Modify(true);
+
+        // 5. Salin Baris (Lines) dari PR Lama ke PR Baru
+        OldPRLine.Reset();
+        OldPRLine.SetRange("Purchase Req. No.", OldPRHeader."Purchase Req. No.");
+        if OldPRLine.FindSet() then begin
+            repeat
+                NewPRLine.Init();
+                NewPRLine.TransferFields(OldPRLine); // Copy semua data line
+
+                // Ganti referensi header ke PR Baru
+                NewPRLine."Purchase Req. No." := NewPRHeader."Purchase Req. No.";
+
+                // Reset field kuantitas transaksional (karena ini dokumen draf baru)
+                NewPRLine.Quantity := OldPRLine.Quantity;
+                NewPRLine."Qty to PO" := OldPRLine.Quantity;
+                NewPRLine."Outstanding Quantity" := OldPRLine.Quantity;
+                NewPRLine."Total Qty On RFQ" := 0;
+                NewPRLine."Total Qty On PO" := 0;
+
+                NewPRLine.Insert(true);
+            until OldPRLine.Next() = 0;
+        end;
+
+        // 6. Matikan PR Lama (Ubah Status ke Canceled Replacement)
+        OldPRHeader.Status := OldPRHeader.Status::"Canceled Replacement";
+        OldPRHeader.Modify(true);
+
+        // 7. Buka halaman PR Baru untuk User
+        Message('PR Replacement berhasil dibuat dengan No. %1.\nPR lama (%2) telah dibatalkan.', NewPRHeader."Purchase Req. No.", OldPRHeader."Purchase Req. No.");
+        Page.Run(Page::"PR Material Card", NewPRHeader);
+    end;
 
 
     // procedure createPOLine_PR(ParPRLine: Record "PR Material Line"; PONo: Code[20]; BatchNo: Integer)
@@ -507,88 +563,166 @@ codeunit 80102 "PR Material Function"
     //NEW
     //UpdateOutsanding
     //Create PO
-    procedure createPOHeader_PRMAT(var ParPRHeader: Record "PR Material Header")
+    // procedure createPOHeader_PRMAT(var ParPRHeader: Record "PR Material Header")
+    // var
+    //     PurchHeaderIns: Record "Purchase Header";
+    //     PurchLineView: Record "Purchase Line";
+    //     lRecPRLine: Record "PR Material Line";
+    //     lRecVendor: Record Vendor;
+    //     lRecPurchSetup: Record "Purchases & Payables Setup";
+    //     lRecNoSeries: Record "No. Series";
+    //     CurrVendorNo: Code[20];
+    //     StatusInt: Integer;
+    //     currPRNo: Code[20];
+    //     currPRNoAdditionalLine: Code[20];
+    //     OutstandingQty: Decimal;
+    //     BatchNo: Integer;
+    // begin
+    //     CLEAR(StatusInt);
+    //     CLEAR(currPRNoAdditionalLine);
+    //     CLEAR(CurrVendorNo);
+    //     ParPRHeader.TestField("Vendor No");
+    //     lrecPurchSetup.GET();
+    //     gRecMSISetup.GET();
+    //     lRecNoSeries.RESET;
+    //     lRecNoSeries.GET(ParPRHeader."No. Series");
+    //     lRecNoSeries.TESTFIELD("Purchase Order Nos.");
+    //     BatchNo := ParPRHeader."Batch No. [PR]" + 1;
+    //     lRecPRLine.RESET;
+    //     lRecPRLine.SETRANGE("Purchase Req. No.", ParPRHeader."Purchase Req. No.");
+    //     lRecPRLine.SETFILTER("Qty to PO", '>%1', 0);
+    //     lRecPRLine.SetCurrentKey("Line No.");
+    //     lRecPRLine.Ascending(TRUE);
+    //     IF lRecPRLine.FIND('-') THEN BEGIN
+    //         REPEAT
+    //             IF CurrVendorNo <> ParPRHeader."Vendor No" THEN BEGIN
+    //                 lRecVendor.RESET;
+    //                 lRecVendor.GET(ParPRHeader."Vendor No");
+    //                 lRecVendor.TestField(lRecVendor.Blocked, lRecVendor.Blocked::" ");
+    //                 PurchHeaderIns.INIT;
+    //                 PurchHeaderIns."Document Type" := PurchHeaderIns."Document Type"::Order;
+    //                 PurchHeaderIns.VALIDATE(PurchHeaderIns."No. Series", gRecMSISetup."Purchase Order Nos.");
+    //                 //PurchHeaderIns."No." := gCUNoSeriesMgt.GetNextNo(lRecNoSeries."Purchase Order Nos.", WORKDATE, TRUE);
+    //                 PurchHeaderIns."No." := NoSeries.GetNextNo(lRecNoSeries."Purchase Order Nos.", WorkDate(), true);
+    //                 PurchHeaderIns.vALIDATE("No. Series", lRecNoSeries."Purchase Order Nos.");
+    //                 PurchHeaderIns.VALIDATE("Buy-from Vendor No.", lRecPRLine."Vendor No.");
+    //                 PurchHeaderIns.INSERT(TRUE);
+    //                 PurchHeaderIns.VALIDATE("Document Date", ParPRHeader."Request Date");
+    //                 PurchHeaderIns.VALIDATE("Location Code", ParPRHeader."Location Code");
+    //                 // PurchHeaderIns.VALIDATE("Currency Code", ParRFQHeader."Currency Code");
+    //                 PurchHeaderIns.VALIDATE("Payment Terms Code", ParPRHeader."Payment Terms Code");
+    //                 // PurchHeaderIns.VALIDATE("Ship-to Code", lRecRFQVendor."Ship-to Code");
+    //                 PurchHeaderIns."Purchase Req. No." := lRecPRLine."Purchase Req. No.";
+    //                 PurchHeaderIns.MODIFY(TRUE);
+    //                 createPOLine_PRAsset(lRecPRLine, PurchHeaderIns."No.", BatchNo);
+    //             END
+    //             ELSE BEGIN
+    //                 createPOLine_PRAsset(lRecPRLine, PurchHeaderIns."No.", BatchNo);
+    //             END;
+    //             CurrVendorNo := ParPRHeader."Vendor No";
+    //         UNTIL lRecPRLine.NEXT = 0;
+    //     END
+    //     ELSE BEGIN
+    //         ERROR('No PR  Line to be found for create PO');
+    //     END;
+    //     ParPRHeader."Batch No. [PR]" := BatchNo;
+    //     StatusInt := closedStatus_PRAssetfromCreatePO(ParPRHeader."Purchase Req. No.");
+    //     IF statusInt <> 0 THEN BEGIN
+    //         Case StatusInt OF
+    //             1:
+    //                 ParPRHeader.VALIDATE(Status, ParPRHeader.Status::Released);
+    //             2:
+    //                 ParPRHeader.VALIDATE(Status, ParPRHeader.Status::Processed);
+    //             3:
+    //                 ParPRHeader.VALIDATE(Status, ParPRHeader.Status::Closed);
+    //         END;
+    //     END;
+    //     ParPRHeader.MODIFY;
+    //     COMMIT;
+    //     PurchLineView.RESET;
+    //     PurchLineView.SETRANGE(PurchLineView."Purchase Req. No.", ParPRHeader."Purchase Req. No.");
+    //     PurchLineView.SETRANGE(PurchLineView."RFQ No.", '');
+    //     PurchLineView.SETRANGE(PurchLineView."Document Type", PurchLineView."Document Type"::Order);
+    //     PurchLineView.SETRANGE(PurchLineView."Batch No. [PR]", BatchNo);
+    //     IF PurchLineView.FIND('-') THEN Page.RUN(Page::"Purchase Lines", PurchLineView);
+    // end;
+    procedure createPOHeader_PRMAT(var PRHeader: Record "PR Material Header")
     var
-        PurchHeaderIns: Record "Purchase Header";
-        PurchLineView: Record "Purchase Line";
-        lRecPRLine: Record "PR Material Line";
-        lRecVendor: Record Vendor;
-        lRecPurchSetup: Record "Purchases & Payables Setup";
-        lRecNoSeries: Record "No. Series";
-        CurrVendorNo: Code[20];
-        StatusInt: Integer;
-        currPRNo: Code[20];
-        currPRNoAdditionalLine: Code[20];
-        OutstandingQty: Decimal;
-        BatchNo: Integer;
+        PRLine: Record "PR Material Line";
+        PurchHeader: Record "Purchase Header";
+        PurchLine: Record "Purchase Line";
+        LineNo: Integer;
+        CurrentVendor: Code[20];
+        POCount: Integer;
     begin
-        CLEAR(StatusInt);
-        CLEAR(currPRNoAdditionalLine);
-        CLEAR(CurrVendorNo);
-        ParPRHeader.TestField("Vendor No");
-        lrecPurchSetup.GET();
-        gRecMSISetup.GET();
-        lRecNoSeries.RESET;
-        lRecNoSeries.GET(ParPRHeader."No. Series");
-        lRecNoSeries.TESTFIELD("Purchase Order Nos.");
-        BatchNo := ParPRHeader."Batch No. [PR]" + 1;
-        lRecPRLine.RESET;
-        lRecPRLine.SETRANGE("Purchase Req. No.", ParPRHeader."Purchase Req. No.");
-        lRecPRLine.SETFILTER("Qty to PO", '>%1', 0);
-        lRecPRLine.SetCurrentKey("Line No.");
-        lRecPRLine.Ascending(TRUE);
-        IF lRecPRLine.FIND('-') THEN BEGIN
-            REPEAT
-                IF CurrVendorNo <> ParPRHeader."Vendor No" THEN BEGIN
-                    lRecVendor.RESET;
-                    lRecVendor.GET(ParPRHeader."Vendor No");
-                    lRecVendor.TestField(lRecVendor.Blocked, lRecVendor.Blocked::" ");
-                    PurchHeaderIns.INIT;
-                    PurchHeaderIns."Document Type" := PurchHeaderIns."Document Type"::Order;
-                    PurchHeaderIns.VALIDATE(PurchHeaderIns."No. Series", gRecMSISetup."Purchase Order Nos.");
-                    //PurchHeaderIns."No." := gCUNoSeriesMgt.GetNextNo(lRecNoSeries."Purchase Order Nos.", WORKDATE, TRUE);
-                    PurchHeaderIns."No." := NoSeries.GetNextNo(lRecNoSeries."Purchase Order Nos.", WorkDate(), true);
-                    PurchHeaderIns.vALIDATE("No. Series", lRecNoSeries."Purchase Order Nos.");
-                    PurchHeaderIns.VALIDATE("Buy-from Vendor No.", lRecPRLine."Vendor No.");
-                    PurchHeaderIns.INSERT(TRUE);
-                    PurchHeaderIns.VALIDATE("Document Date", ParPRHeader."Request Date");
-                    PurchHeaderIns.VALIDATE("Location Code", ParPRHeader."Location Code");
-                    // PurchHeaderIns.VALIDATE("Currency Code", ParRFQHeader."Currency Code");
-                    PurchHeaderIns.VALIDATE("Payment Terms Code", ParPRHeader."Payment Terms Code");
-                    // PurchHeaderIns.VALIDATE("Ship-to Code", lRecRFQVendor."Ship-to Code");
-                    PurchHeaderIns."Purchase Req. No." := lRecPRLine."Purchase Req. No.";
-                    PurchHeaderIns.MODIFY(TRUE);
-                    createPOLine_PRAsset(lRecPRLine, PurchHeaderIns."No.", BatchNo);
-                END
-                ELSE BEGIN
-                    createPOLine_PRAsset(lRecPRLine, PurchHeaderIns."No.", BatchNo);
-                END;
-                CurrVendorNo := ParPRHeader."Vendor No";
-            UNTIL lRecPRLine.NEXT = 0;
-        END
-        ELSE BEGIN
-            ERROR('No PR  Line to be found for create PO');
-        END;
-        ParPRHeader."Batch No. [PR]" := BatchNo;
-        StatusInt := closedStatus_PRAssetfromCreatePO(ParPRHeader."Purchase Req. No.");
-        IF statusInt <> 0 THEN BEGIN
-            Case StatusInt OF
-                1:
-                    ParPRHeader.VALIDATE(Status, ParPRHeader.Status::Released);
-                2:
-                    ParPRHeader.VALIDATE(Status, ParPRHeader.Status::Processed);
-                3:
-                    ParPRHeader.VALIDATE(Status, ParPRHeader.Status::Closed);
-            END;
-        END;
-        ParPRHeader.MODIFY;
-        COMMIT;
-        PurchLineView.RESET;
-        PurchLineView.SETRANGE(PurchLineView."Purchase Req. No.", ParPRHeader."Purchase Req. No.");
-        PurchLineView.SETRANGE(PurchLineView."RFQ No.", '');
-        PurchLineView.SETRANGE(PurchLineView."Document Type", PurchLineView."Document Type"::Order);
-        PurchLineView.SETRANGE(PurchLineView."Batch No. [PR]", BatchNo);
-        IF PurchLineView.FIND('-') THEN Page.RUN(Page::"Purchase Lines", PurchLineView);
+        // 1. Validasi Dokumen Utama
+        PRHeader.TestField(Status, PRHeader.Status::Released);
+        PRHeader.TestField("Item Category Code"); // Wajib diisi
+
+        PRLine.Reset();
+        PRLine.SetRange("Purchase Req. No.", PRHeader."Purchase Req. No.");
+        PRLine.SetFilter("Qty to PO", '>0'); // Hanya proses baris yang punya kuantitas untuk di-PO-kan
+
+        // 2. Wajib SetCurrentKey agar baris terurut berdasarkan Vendor
+        PRLine.SetCurrentKey("Purchase Req. No.", "Vendor No.");
+
+        if PRLine.FindSet() then begin
+            CurrentVendor := '';
+            POCount := 0;
+
+            repeat
+                // Pastikan Vendor No. pada baris sudah diisi
+                PRLine.TestField("Vendor No.");
+
+                // 3. LOGIKA GROUPING: Jika Vendor baris ini BEDA dengan Vendor baris sebelumnya, Bikin PO Baru
+                if CurrentVendor <> PRLine."Vendor No." then begin
+                    PurchHeader.Init();
+                    PurchHeader.Validate("Document Type", PurchHeader."Document Type"::Order);
+                    PurchHeader.Insert(true);
+
+                    PurchHeader.Validate("Buy-from Vendor No.", PRLine."Vendor No.");
+                    PurchHeader.Validate("Document Date", WorkDate());
+                    PurchHeader."Your Reference" := PRHeader."Purchase Req. No.";
+                    PurchHeader.Modify(true);
+
+                    // Update Tracker untuk baris selanjutnya
+                    CurrentVendor := PRLine."Vendor No.";
+                    LineNo := 10000;
+                    POCount += 1;
+                end;
+
+                // 4. Insert Baris (Lines) ke PO yang sedang aktif di-looping
+                PurchLine.Init();
+                PurchLine.Validate("Document Type", PurchHeader."Document Type");
+                PurchLine.Validate("Document No.", PurchHeader."No.");
+                PurchLine.Validate("Line No.", LineNo);
+                PurchLine.Insert(true);
+
+                // Mapping Tipe Barang
+                if PRLine.Type = PRLine.Type::Item then
+                    PurchLine.Validate(Type, PurchLine.Type::Item)
+                else if PRLine.Type = PRLine.Type::"G/L Account" then
+                    PurchLine.Validate(Type, PurchLine.Type::"G/L Account");
+
+                PurchLine.Validate("No.", PRLine."Item No.");
+                PurchLine.Validate("Location Code", PRLine."Location Code");
+                PurchLine.Validate(Quantity, PRLine."Qty to PO");
+                PurchLine.Validate("Direct Unit Cost", PRLine."Direct Unit Cost");
+                PurchLine.Modify(true);
+
+                // 5. Kurangi sisa Qty yang belum di-PO-kan di PR Line
+                PRLine."Total Qty On PO" += PRLine."Qty to PO";
+                PRLine."Outstanding Quantity" -= PRLine."Qty to PO";
+                PRLine."Qty to PO" := 0;
+                PRLine.Modify(true);
+
+                LineNo += 10000;
+            until PRLine.Next() = 0;
+
+            Message('Berhasil membuat %1 dokumen Purchase Order. PO telah dikelompokkan berdasarkan Vendor.', POCount);
+        end else begin
+            Error('Tidak ada baris PR yang siap diproses menjadi PO. Pastikan "Qty to PO" lebih dari 0.');
+        end;
     end;
 
     procedure createPOLine_PRAsset(ParPRLine: Record "PR Material Line"; PONo: Code[20]; BatchNo: Integer)

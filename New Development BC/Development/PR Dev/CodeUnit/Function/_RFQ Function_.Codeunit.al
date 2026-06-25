@@ -617,6 +617,105 @@ codeunit 80103 "RFQ Function"
         END;
     end;
     //Create PO
+    // procedure createPOHeader_RFQ(var ParRFQHeader: Record "RFQ Header")
+    // var
+    //     PurchHeaderIns: Record "Purchase Header";
+    //     PurchLineView: Record "Purchase Line";
+    //     lRecRFQLine: Record "RFQ Line";
+    //     lRecRFQVendor: Record "RFQ Vendor List";
+    //     lRecVendor: Record Vendor;
+    //     lRecNoSeries: Record "No. Series";
+    //     CurrVendorNo: Code[20];
+    //     BatchNo: Integer;
+    //     StatusInt: Integer;
+    //     currPRNo: Code[20];
+    //     currPRNoAdditionalLine: Code[20];
+    //     YourReference: Text[35];
+    //     OutstandingQty: Decimal;
+    //     FACount: Integer;
+    //     isPPH22: Boolean;
+    //     isPBBKB: Boolean;
+    //     WHTBusVendor: Code[20];
+    // begin
+    //     CLEAR(StatusInt);
+    //     CLEAR(WHTBusVendor);
+    //     CLEAR(currPRNoAdditionalLine);
+    //     gRecMSISetup.GET();
+
+    //     lRecNoSeries.RESET;
+    //     lRecNoSeries.GET(ParRFQHeader."No. Series");
+    //     lRecNoSeries.TESTFIELD("Purchase Order Nos.");
+    //     BatchNo := ParRFQHeader."Batch No. [PR]" + 1;
+    //     lRecRFQLine.RESET;
+    //     lRecRFQLine.SETRANGE("RFQ No.", ParRFQHeader."RFQ No.");
+    //     lRecRFQLine.SETFILTER("Vendor No.", '<>%1', '');
+    //     lRecRFQLine.SETFILTER("Qty to PO", '>%1', 0);
+    //     lRecRFQLine.SetCurrentKey("Vendor No.");
+    //     lRecRFQLine.Ascending(TRUE);
+    //     IF lRecRFQLine.FIND('-') THEN BEGIN
+    //         REPEAT
+    //             lRecRFQLine.CalcFields("Entry No. RFQ Vendor");
+
+    //             CLEAR(OutstandingQty);
+    //             IF CurrVendorNo <> lRecRFQLine."Vendor No." THEN BEGIN
+    //                 lRecVendor.RESET;
+    //                 lRecVendor.GET(lRecRFQLine."Vendor No.");
+    //                 lRecVendor.TestField(lRecVendor.Blocked, lRecVendor.Blocked::" ");
+    //                 lRecRFQVendor.RESET;
+    //                 lRecRFQVendor.GET(lRecRFQLine."RFQ No.", lRecRFQLine."Entry No. RFQ Vendor");
+    //                 PurchHeaderIns.INIT;
+    //                 PurchHeaderIns."Document Type" := PurchHeaderIns."Document Type"::Order;
+    //                 PurchHeaderIns.VALIDATE(PurchHeaderIns."No. Series", gRecMSISetup."Purchase Order Nos.");
+    //                 //PurchHeaderIns."No." := gCUNoSeriesMgt.GetNextNo(lRecNoSeries."Purchase Order Nos.", WORKDATE, TRUE);
+    //                 PurchHeaderIns."No." := NoSeries.GetNextNo(lRecNoSeries."Purchase Order Nos.");
+    //                 PurchHeaderIns.vALIDATE("No. Series", lRecNoSeries."Purchase Order Nos.");
+    //                 PurchHeaderIns.VALIDATE("Buy-from Vendor No.", lRecRFQLine."Vendor No.");
+    //                 PurchHeaderIns.INSERT(TRUE);
+    //                 PurchHeaderIns.VALIDATE("Document Date", ParRFQHeader."Document Date");
+    //                 PurchHeaderIns.VALIDATE("Location Code", lRecRFQLine."Location Code");
+    //                 // PurchHeaderIns.VALIDATE("Currency Code", ParRFQHeader."Currency Code");
+    //                 PurchHeaderIns.VALIDATE("Payment Terms Code", lRecRFQVendor."Payment Terms Code");
+    //                 // PurchHeaderIns.VALIDATE("Ship-to Code", lRecRFQVendor."Ship-to Code");
+    //                 PurchHeaderIns.VALIDATE("Shipment Method Code", lRecRFQVendor."Shipment Method Code");
+    //                 PurchHeaderIns.VALIDATE("Tanggal Surat Jalan", lRecRFQVendor."Shipping Date");
+    //                 PurchHeaderIns."RFQ No." := lRecRFQLine."RFQ No.";
+    //                 PurchHeaderIns."Purchase Req. No." := lRecRFQLine."Purchase Req. No.";
+    //                 PurchHeaderIns."Material Req. No." := lRecRFQLine."Material Req. No.";
+    //                 PurchHeaderIns.MODIFY(TRUE);
+    //                 createPOLine_RFQ(lRecRFQLine, PurchHeaderIns."No.", BatchNo);
+    //             END
+    //             ELSE BEGIN
+    //                 createPOLine_RFQ(lRecRFQLine, PurchHeaderIns."No.", BatchNo);
+    //             END;
+    //             CurrVendorNo := lRecRFQLine."Vendor No.";
+    //         UNTIL lRecRFQLine.NEXT = 0;
+    //     END
+    //     ELSE BEGIN
+    //         ERROR('No RFQ Line to be found for create PO');
+    //     END;
+
+
+    //     ParRFQHeader.MODIFY;
+    //     COMMIT;
+    //     PurchLineView.RESET;
+    //     PurchLineView.SETRANGE(PurchLineView."RFQ No.", ParRFQHeader."RFQ No.");
+    //     PurchLineView.SETRANGE(PurchLineView."Document Type", PurchLineView."Document Type"::Order);
+    //     PurchLineView.SETRANGE(PurchLineView."Batch No. [PR]", BatchNo);
+    //     ParRFQHeader."Batch No. [PR]" := BatchNo;
+    //     StatusInt := closedStatus_RFQfromcreatePO(ParRFQHeader."RFQ No.");
+    //     IF statusInt <> 0 THEN BEGIN
+    //         Case StatusInt OF
+    //             1:
+    //                 ParRFQHeader.VALIDATE(Status, ParRFQHeader.Status::Released);
+    //             2:
+    //                 ParRFQHeader.VALIDATE(Status, ParRFQHeader.Status::Processed);
+    //             3:
+    //                 ParRFQHeader.VALIDATE(Status, ParRFQHeader.Status::Closed);
+    //         END;
+    //     END;
+    //     IF PurchLineView.FIND('-') THEN Page.RUN(Page::"Purchase Lines", PurchLineView);
+    // end;
+
     procedure createPOHeader_RFQ(var ParRFQHeader: Record "RFQ Header")
     var
         PurchHeaderIns: Record "Purchase Header";
@@ -625,6 +724,7 @@ codeunit 80103 "RFQ Function"
         lRecRFQVendor: Record "RFQ Vendor List";
         lRecVendor: Record Vendor;
         lRecNoSeries: Record "No. Series";
+        lRecRFQLineDet: Record "RFQ Line Details"; // <--- TAMBAHAN 1: Deklarasi variabel baru
         CurrVendorNo: Code[20];
         BatchNo: Integer;
         StatusInt: Integer;
@@ -646,12 +746,14 @@ codeunit 80103 "RFQ Function"
         lRecNoSeries.GET(ParRFQHeader."No. Series");
         lRecNoSeries.TESTFIELD("Purchase Order Nos.");
         BatchNo := ParRFQHeader."Batch No. [PR]" + 1;
+
         lRecRFQLine.RESET;
         lRecRFQLine.SETRANGE("RFQ No.", ParRFQHeader."RFQ No.");
         lRecRFQLine.SETFILTER("Vendor No.", '<>%1', '');
         lRecRFQLine.SETFILTER("Qty to PO", '>%1', 0);
         lRecRFQLine.SetCurrentKey("Vendor No.");
         lRecRFQLine.Ascending(TRUE);
+
         IF lRecRFQLine.FIND('-') THEN BEGIN
             REPEAT
                 lRecRFQLine.CalcFields("Entry No. RFQ Vendor");
@@ -661,27 +763,40 @@ codeunit 80103 "RFQ Function"
                     lRecVendor.RESET;
                     lRecVendor.GET(lRecRFQLine."Vendor No.");
                     lRecVendor.TestField(lRecVendor.Blocked, lRecVendor.Blocked::" ");
+
                     lRecRFQVendor.RESET;
                     lRecRFQVendor.GET(lRecRFQLine."RFQ No.", lRecRFQLine."Entry No. RFQ Vendor");
+
                     PurchHeaderIns.INIT;
                     PurchHeaderIns."Document Type" := PurchHeaderIns."Document Type"::Order;
                     PurchHeaderIns.VALIDATE(PurchHeaderIns."No. Series", gRecMSISetup."Purchase Order Nos.");
-                    //PurchHeaderIns."No." := gCUNoSeriesMgt.GetNextNo(lRecNoSeries."Purchase Order Nos.", WORKDATE, TRUE);
                     PurchHeaderIns."No." := NoSeries.GetNextNo(lRecNoSeries."Purchase Order Nos.");
                     PurchHeaderIns.vALIDATE("No. Series", lRecNoSeries."Purchase Order Nos.");
                     PurchHeaderIns.VALIDATE("Buy-from Vendor No.", lRecRFQLine."Vendor No.");
                     PurchHeaderIns.INSERT(TRUE);
                     PurchHeaderIns.VALIDATE("Document Date", ParRFQHeader."Document Date");
                     PurchHeaderIns.VALIDATE("Location Code", lRecRFQLine."Location Code");
-                    // PurchHeaderIns.VALIDATE("Currency Code", ParRFQHeader."Currency Code");
                     PurchHeaderIns.VALIDATE("Payment Terms Code", lRecRFQVendor."Payment Terms Code");
-                    // PurchHeaderIns.VALIDATE("Ship-to Code", lRecRFQVendor."Ship-to Code");
                     PurchHeaderIns.VALIDATE("Shipment Method Code", lRecRFQVendor."Shipment Method Code");
                     PurchHeaderIns.VALIDATE("Tanggal Surat Jalan", lRecRFQVendor."Shipping Date");
+
+                    // =======================================================================
+                    // --- TAMBAHAN 2: SUNTIKAN MAUT EXPECTED DATE KE PO HEADER ---
+                    // =======================================================================
+                    lRecRFQLineDet.RESET();
+                    lRecRFQLineDet.SETRANGE("RFQ No.", lRecRFQLine."RFQ No.");
+                    lRecRFQLineDet.SETRANGE("Entry No.", lRecRFQLine."Winner RFQ Line Details");
+                    IF lRecRFQLineDet.FINDFIRST() THEN BEGIN
+                        IF lRecRFQLineDet."Expected Receipt Date" <> 0D THEN
+                            PurchHeaderIns.VALIDATE("Expected Receipt Date", lRecRFQLineDet."Expected Receipt Date");
+                    END;
+                    // =======================================================================
+
                     PurchHeaderIns."RFQ No." := lRecRFQLine."RFQ No.";
                     PurchHeaderIns."Purchase Req. No." := lRecRFQLine."Purchase Req. No.";
                     PurchHeaderIns."Material Req. No." := lRecRFQLine."Material Req. No.";
                     PurchHeaderIns.MODIFY(TRUE);
+
                     createPOLine_RFQ(lRecRFQLine, PurchHeaderIns."No.", BatchNo);
                 END
                 ELSE BEGIN
@@ -694,14 +809,15 @@ codeunit 80103 "RFQ Function"
             ERROR('No RFQ Line to be found for create PO');
         END;
 
-
         ParRFQHeader.MODIFY;
         COMMIT;
+
         PurchLineView.RESET;
         PurchLineView.SETRANGE(PurchLineView."RFQ No.", ParRFQHeader."RFQ No.");
         PurchLineView.SETRANGE(PurchLineView."Document Type", PurchLineView."Document Type"::Order);
         PurchLineView.SETRANGE(PurchLineView."Batch No. [PR]", BatchNo);
         ParRFQHeader."Batch No. [PR]" := BatchNo;
+
         StatusInt := closedStatus_RFQfromcreatePO(ParRFQHeader."RFQ No.");
         IF statusInt <> 0 THEN BEGIN
             Case StatusInt OF
@@ -718,105 +834,200 @@ codeunit 80103 "RFQ Function"
 
 
     //Create PO-Vensel
-    procedure createPOHeader_RFQ2(var ParRFQHeader: Record "Vensel Header")
+    // procedure createPOHeader_RFQ2(var ParRFQHeader: Record "Vensel Header")
+    // var
+    //     PurchHeaderIns: Record "Purchase Header";
+    //     PurchLineView: Record "Purchase Line";
+    //     lRecRFQLine: Record "RFQ Line";
+    //     lRecRFQVendor: Record "RFQ Vendor List";
+    //     lRecVendor: Record Vendor;
+    //     lRecNoSeries: Record "No. Series";
+    //     CurrVendorNo: Code[20];
+    //     BatchNo: Integer;
+    //     StatusInt: Integer;
+    //     currPRNo: Code[20];
+    //     currPRNoAdditionalLine: Code[20];
+    //     YourReference: Text[35];
+    //     OutstandingQty: Decimal;
+    //     FACount: Integer;
+    //     isPPH22: Boolean;
+    //     isPBBKB: Boolean;
+    //     WHTBusVendor: Code[20];
+    // begin
+    //     CLEAR(StatusInt);
+    //     CLEAR(WHTBusVendor);
+    //     CLEAR(currPRNoAdditionalLine);
+    //     gRecMSISetup.GET();
+
+    //     lRecNoSeries.RESET;
+    //     lRecNoSeries.GET(ParRFQHeader."No. Series");
+    //     lRecNoSeries.TESTFIELD("Purchase Order Nos.");
+    //     BatchNo := ParRFQHeader."Batch No. [PR]" + 1;
+    //     lRecRFQLine.RESET;
+    //     lRecRFQLine.SETRANGE("RFQ No.", ParRFQHeader."RFQ No.");
+    //     lRecRFQLine.SETFILTER("Vendor No.", '<>%1', '');
+    //     lRecRFQLine.SETFILTER("Qty to PO", '>%1', 0);
+    //     lRecRFQLine.SetCurrentKey("Vendor No.");
+    //     lRecRFQLine.Ascending(TRUE);
+    //     IF lRecRFQLine.FIND('-') THEN BEGIN
+    //         REPEAT
+    //             lRecRFQLine.CalcFields("Entry No. RFQ Vendor");
+
+    //             CLEAR(OutstandingQty);
+    //             IF CurrVendorNo <> lRecRFQLine."Vendor No." THEN BEGIN
+    //                 lRecVendor.RESET;
+    //                 lRecVendor.GET(lRecRFQLine."Vendor No.");
+    //                 lRecVendor.TestField(lRecVendor.Blocked, lRecVendor.Blocked::" ");
+    //                 lRecRFQVendor.RESET;
+    //                 lRecRFQVendor.GET(lRecRFQLine."RFQ No.", lRecRFQLine."Entry No. RFQ Vendor");
+    //                 PurchHeaderIns.INIT;
+    //                 PurchHeaderIns."Document Type" := PurchHeaderIns."Document Type"::Order;
+    //                 PurchHeaderIns.VALIDATE(PurchHeaderIns."No. Series", gRecMSISetup."Purchase Order Nos.");
+    //                 // PurchHeaderIns."No." := gCUNoSeriesMgt.GetNextNo(lRecNoSeries."Purchase Order Nos.", WORKDATE, TRUE);
+    //                 PurchHeaderIns."No." := NoSeries.GetNextNo(lRecNoSeries."Purchase Order Nos.");
+    //                 PurchHeaderIns.vALIDATE("No. Series", lRecNoSeries."Purchase Order Nos.");
+    //                 PurchHeaderIns.VALIDATE("Buy-from Vendor No.", lRecRFQLine."Vendor No.");
+    //                 PurchHeaderIns.INSERT(TRUE);
+    //                 PurchHeaderIns.VALIDATE("Document Date", ParRFQHeader."Document Date");
+    //                 PurchHeaderIns.VALIDATE("Location Code", lRecRFQLine."Location Code");
+    //                 // PurchHeaderIns.VALIDATE("Currency Code", ParRFQHeader."Currency Code");
+    //                 PurchHeaderIns.VALIDATE("Payment Terms Code", lRecRFQVendor."Payment Terms Code");
+    //                 // PurchHeaderIns.VALIDATE("Ship-to Code", lRecRFQVendor."Ship-to Code");
+    //                 PurchHeaderIns.VALIDATE("Shipment Method Code", lRecRFQVendor."Shipment Method Code");
+    //                 PurchHeaderIns.VALIDATE("Tanggal Surat Jalan", lRecRFQVendor."Shipping Date");
+    //                 PurchHeaderIns."RFQ No." := lRecRFQLine."RFQ No.";
+    //                 PurchHeaderIns."Purchase Req. No." := lRecRFQLine."Purchase Req. No.";
+    //                 PurchHeaderIns."Material Req. No." := lRecRFQLine."Material Req. No.";
+    //                 PurchHeaderIns.MODIFY(TRUE);
+    //                 createPOLine_RFQ(lRecRFQLine, PurchHeaderIns."No.", BatchNo);
+    //             END
+    //             ELSE BEGIN
+    //                 createPOLine_RFQ(lRecRFQLine, PurchHeaderIns."No.", BatchNo);
+    //             END;
+    //             CurrVendorNo := lRecRFQLine."Vendor No.";
+    //         UNTIL lRecRFQLine.NEXT = 0;
+    //     END
+    //     ELSE BEGIN
+    //         ERROR('No RFQ Line to be found for create PO');
+    //     END;
+
+    //     ParRFQHeader.MODIFY;
+    //     COMMIT;
+    //     PurchLineView.RESET;
+    //     PurchLineView.SETRANGE(PurchLineView."RFQ No.", ParRFQHeader."RFQ No.");
+    //     PurchLineView.SETRANGE(PurchLineView."Document Type", PurchLineView."Document Type"::Order);
+    //     PurchLineView.SETRANGE(PurchLineView."Batch No. [PR]", BatchNo);
+    //     ParRFQHeader."Batch No. [PR]" := BatchNo;
+    //     StatusInt := closedStatus_RFQfromcreatePO(ParRFQHeader."RFQ No.");
+    //     IF statusInt <> 0 THEN BEGIN
+    //         Case StatusInt OF
+    //             1:
+    //                 ParRFQHeader.VALIDATE(Status, ParRFQHeader.Status::Released);
+    //             2:
+    //                 ParRFQHeader.VALIDATE(Status, ParRFQHeader.Status::Processed);
+    //             3:
+    //                 ParRFQHeader.VALIDATE(Status, ParRFQHeader.Status::Closed);
+    //         END;
+    //     END;
+    //     IF PurchLineView.FIND('-') THEN Page.RUN(Page::"Purchase Lines", PurchLineView);
+
+    // end;
+
+    procedure createPOHeader_RFQ2(var VenselHeader: Record "Vensel Header")
     var
-        PurchHeaderIns: Record "Purchase Header";
-        PurchLineView: Record "Purchase Line";
-        lRecRFQLine: Record "RFQ Line";
-        lRecRFQVendor: Record "RFQ Vendor List";
-        lRecVendor: Record Vendor;
-        lRecNoSeries: Record "No. Series";
-        CurrVendorNo: Code[20];
-        BatchNo: Integer;
-        StatusInt: Integer;
-        currPRNo: Code[20];
-        currPRNoAdditionalLine: Code[20];
-        YourReference: Text[35];
-        OutstandingQty: Decimal;
-        FACount: Integer;
-        isPPH22: Boolean;
-        isPBBKB: Boolean;
-        WHTBusVendor: Code[20];
+        RFQLine: Record "RFQ Line";
+        RFQVendor: Record "RFQ Vendor List";
+        PurchHeader: Record "Purchase Header";
+        PurchLine: Record "Purchase Line";
+        LineNo: Integer;
+        CurrentVendor: Code[20];
+        POCount: Integer;
     begin
-        CLEAR(StatusInt);
-        CLEAR(WHTBusVendor);
-        CLEAR(currPRNoAdditionalLine);
-        gRecMSISetup.GET();
+        // 1. Validasi Status Dokumen Vensel
+        if not (VenselHeader.Status in [VenselHeader.Status::Released, VenselHeader.Status::Processed, VenselHeader.Status::"Send To Vendor"]) then
+            Error('Status must be released or processed to create purchase order');
 
-        lRecNoSeries.RESET;
-        lRecNoSeries.GET(ParRFQHeader."No. Series");
-        lRecNoSeries.TESTFIELD("Purchase Order Nos.");
-        BatchNo := ParRFQHeader."Batch No. [PR]" + 1;
-        lRecRFQLine.RESET;
-        lRecRFQLine.SETRANGE("RFQ No.", ParRFQHeader."RFQ No.");
-        lRecRFQLine.SETFILTER("Vendor No.", '<>%1', '');
-        lRecRFQLine.SETFILTER("Qty to PO", '>%1', 0);
-        lRecRFQLine.SetCurrentKey("Vendor No.");
-        lRecRFQLine.Ascending(TRUE);
-        IF lRecRFQLine.FIND('-') THEN BEGIN
-            REPEAT
-                lRecRFQLine.CalcFields("Entry No. RFQ Vendor");
+        // 2. Filter Baris RFQ yang terhubung dengan dokumen ini dan siap di-PO-kan
+        RFQLine.Reset();
+        RFQLine.SetRange("RFQ No.", VenselHeader."RFQ No.");
+        RFQLine.SetFilter("Qty to PO", '>0');
+        RFQLine.SetFilter("Winner RFQ Line Details", '<>0'); // Pastikan pemenang sudah dipilih
 
-                CLEAR(OutstandingQty);
-                IF CurrVendorNo <> lRecRFQLine."Vendor No." THEN BEGIN
-                    lRecVendor.RESET;
-                    lRecVendor.GET(lRecRFQLine."Vendor No.");
-                    lRecVendor.TestField(lRecVendor.Blocked, lRecVendor.Blocked::" ");
-                    lRecRFQVendor.RESET;
-                    lRecRFQVendor.GET(lRecRFQLine."RFQ No.", lRecRFQLine."Entry No. RFQ Vendor");
-                    PurchHeaderIns.INIT;
-                    PurchHeaderIns."Document Type" := PurchHeaderIns."Document Type"::Order;
-                    PurchHeaderIns.VALIDATE(PurchHeaderIns."No. Series", gRecMSISetup."Purchase Order Nos.");
-                    // PurchHeaderIns."No." := gCUNoSeriesMgt.GetNextNo(lRecNoSeries."Purchase Order Nos.", WORKDATE, TRUE);
-                    PurchHeaderIns."No." := NoSeries.GetNextNo(lRecNoSeries."Purchase Order Nos.");
-                    PurchHeaderIns.vALIDATE("No. Series", lRecNoSeries."Purchase Order Nos.");
-                    PurchHeaderIns.VALIDATE("Buy-from Vendor No.", lRecRFQLine."Vendor No.");
-                    PurchHeaderIns.INSERT(TRUE);
-                    PurchHeaderIns.VALIDATE("Document Date", ParRFQHeader."Document Date");
-                    PurchHeaderIns.VALIDATE("Location Code", lRecRFQLine."Location Code");
-                    // PurchHeaderIns.VALIDATE("Currency Code", ParRFQHeader."Currency Code");
-                    PurchHeaderIns.VALIDATE("Payment Terms Code", lRecRFQVendor."Payment Terms Code");
-                    // PurchHeaderIns.VALIDATE("Ship-to Code", lRecRFQVendor."Ship-to Code");
-                    PurchHeaderIns.VALIDATE("Shipment Method Code", lRecRFQVendor."Shipment Method Code");
-                    PurchHeaderIns.VALIDATE("Tanggal Surat Jalan", lRecRFQVendor."Shipping Date");
-                    PurchHeaderIns."RFQ No." := lRecRFQLine."RFQ No.";
-                    PurchHeaderIns."Purchase Req. No." := lRecRFQLine."Purchase Req. No.";
-                    PurchHeaderIns."Material Req. No." := lRecRFQLine."Material Req. No.";
-                    PurchHeaderIns.MODIFY(TRUE);
-                    createPOLine_RFQ(lRecRFQLine, PurchHeaderIns."No.", BatchNo);
-                END
-                ELSE BEGIN
-                    createPOLine_RFQ(lRecRFQLine, PurchHeaderIns."No.", BatchNo);
-                END;
-                CurrVendorNo := lRecRFQLine."Vendor No.";
-            UNTIL lRecRFQLine.NEXT = 0;
-        END
-        ELSE BEGIN
-            ERROR('No RFQ Line to be found for create PO');
-        END;
+        // Wajib SetCurrentKey agar proses pembuatan PO terkelompok per Vendor dengan rapi
+        RFQLine.SetCurrentKey("RFQ No.", "Winner RFQ Line Details");
 
-        ParRFQHeader.MODIFY;
-        COMMIT;
-        PurchLineView.RESET;
-        PurchLineView.SETRANGE(PurchLineView."RFQ No.", ParRFQHeader."RFQ No.");
-        PurchLineView.SETRANGE(PurchLineView."Document Type", PurchLineView."Document Type"::Order);
-        PurchLineView.SETRANGE(PurchLineView."Batch No. [PR]", BatchNo);
-        ParRFQHeader."Batch No. [PR]" := BatchNo;
-        StatusInt := closedStatus_RFQfromcreatePO(ParRFQHeader."RFQ No.");
-        IF statusInt <> 0 THEN BEGIN
-            Case StatusInt OF
-                1:
-                    ParRFQHeader.VALIDATE(Status, ParRFQHeader.Status::Released);
-                2:
-                    ParRFQHeader.VALIDATE(Status, ParRFQHeader.Status::Processed);
-                3:
-                    ParRFQHeader.VALIDATE(Status, ParRFQHeader.Status::Closed);
-            END;
-        END;
-        IF PurchLineView.FIND('-') THEN Page.RUN(Page::"Purchase Lines", PurchLineView);
+        if RFQLine.FindSet() then begin
+            CurrentVendor := '';
+            POCount := 0;
 
+            repeat
+                // 3. Tarik data Vendor Pemenang dari tabel RFQ Vendor List
+                if RFQVendor.Get(RFQLine."RFQ No.", RFQLine."Winner RFQ Line Details") then begin
+                    RFQVendor.TestField("Vendor No.");
+
+                    // 4. LOGIKA GROUPING: Jika Vendor pemenang beda dari baris sebelumnya, Bikin PO Baru
+                    if CurrentVendor <> RFQVendor."Vendor No." then begin
+                        PurchHeader.Init();
+                        PurchHeader.Validate("Document Type", PurchHeader."Document Type"::Order);
+                        PurchHeader.Insert(true); // Generate PO No.
+
+                        PurchHeader.Validate("Buy-from Vendor No.", RFQVendor."Vendor No.");
+                        PurchHeader.Validate("Document Date", WorkDate());
+                        PurchHeader."Your Reference" := VenselHeader."Vensel No."; // Tracking dari Vensel
+                        PurchHeader.Modify(true);
+
+                        // Update variabel pelacak untuk baris berikutnya
+                        CurrentVendor := RFQVendor."Vendor No.";
+                        LineNo := 10000;
+                        POCount += 1;
+                    end;
+
+                    // 5. Masukkan Baris Barang (Lines) ke dalam PO yang sedang aktif
+                    PurchLine.Init();
+                    PurchLine.Validate("Document Type", PurchHeader."Document Type");
+                    PurchLine.Validate("Document No.", PurchHeader."No.");
+                    PurchLine.Validate("Line No.", LineNo);
+                    PurchLine.Insert(true);
+
+                    // Mapping Tipe Barang
+                    if RFQLine.Type = RFQLine.Type::Item then
+                        PurchLine.Validate(Type, PurchLine.Type::Item)
+                    else if RFQLine.Type = RFQLine.Type::"G/L Account" then
+                        PurchLine.Validate(Type, PurchLine.Type::"G/L Account");
+
+                    // Transfer Kuantitas & Data Master
+                    PurchLine.Validate("No.", RFQLine."No.");
+                    PurchLine.Validate("Location Code", RFQLine."Location Code");
+                    PurchLine.Validate(Quantity, RFQLine."Qty to PO");
+
+                    // ====================================================================
+                    // INI DIA KODENYA: Tarik Expected Receipt Date dari Vendor Selection
+                    // ====================================================================
+                    if RFQVendor."Shipping Date" <> 0D then
+                        PurchLine.Validate("Expected Receipt Date", RFQVendor."Expected Receipt Date");
+                    // ====================================================================
+
+                    PurchLine.Modify(true);
+
+                    // 6. Update Sisa Kuantitas di RFQ Line (Potong Qty to PO)
+                    RFQLine."Total Qty On PO" += RFQLine."Qty to PO";
+                    RFQLine."Outstanding Quantity" -= RFQLine."Qty to PO";
+                    RFQLine."Qty to PO" := 0;
+                    RFQLine.Modify(true);
+
+                    LineNo += 10000;
+                end else begin
+                    Error('Data Vendor Pemenang tidak ditemukan untuk baris RFQ No. %1, Line %2.', RFQLine."RFQ No.", RFQLine."Line No.");
+                end;
+            until RFQLine.Next() = 0;
+
+            // 7. Selesaikan Proses
+            Message('Berhasil membuat %1 dokumen Purchase Order dari Vendor Selection %2.', POCount, VenselHeader."Vensel No.");
+
+        end else begin
+            Error('Tidak ada baris yang siap diproses menjadi PO. Pastikan "Qty to PO" terisi lebih dari 0 dan Pemenang (Winner) sudah dipilih.');
+        end;
     end;
-
 
 
     procedure createPOLine_RFQ(ParRFQLine: Record "RFQ Line"; PONo: Code[20]; BatchNo: Integer)

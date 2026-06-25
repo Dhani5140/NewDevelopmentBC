@@ -316,6 +316,37 @@ table 80103 "PR Material Header"
             DataClassification = ToBeClassified;
 
         }
+        field(40; "PR Type"; Enum "PR Type replacement")
+        {
+            Caption = 'PR Type';
+            DataClassification = ToBeClassified;
+            Editable = false;
+        }
+        field(41; "Replaced PR No."; Code[20])
+        {
+            Caption = 'Replaced PR No.';
+            DataClassification = ToBeClassified;
+            Editable = false;
+            TableRelation = "PR Material Header"."Purchase Req. No.";
+        }
+
+        field(50; "Item Category Code"; Code[20])
+        {
+            Caption = 'Item Category Code';
+            DataClassification = ToBeClassified;
+            TableRelation = "Item Category";
+
+            trigger OnValidate()
+            var
+                lRecPRLine: Record "PR Material Line";
+            begin
+                // Cegah perubahan Kategori jika sudah ada baris barang yang diinput
+                lRecPRLine.Reset();
+                lRecPRLine.SetRange("Purchase Req. No.", Rec."Purchase Req. No.");
+                if not lRecPRLine.IsEmpty then
+                    Error('Tidak bisa mengubah Item Category karena sudah ada baris barang. Hapus baris barang terlebih dahulu untuk mengganti Kategori.');
+            end;
+        }
     }
     keys
     {
@@ -383,6 +414,8 @@ table 80103 "PR Material Header"
         "Last Modified By" := USERID;
         "Last Modified Date" := CurrentDateTime;
         Status := Status::Open;
+        "PR Type" := "PR Type"::"New Request";
+
     end;
 
     trigger OnRename()

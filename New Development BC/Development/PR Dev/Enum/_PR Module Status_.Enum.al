@@ -29,4 +29,8 @@ enum 80100 "PR Module Status"
     {
 
     }
+    value(10; "Canceled Replacement")
+    {
+        Caption = 'Canceled Replacement';
+    }
 }

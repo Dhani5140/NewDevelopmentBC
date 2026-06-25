@@ -56,6 +56,50 @@ page 80106 "PR Material Subform"
                     ApplicationArea = All;
                     Editable = gBolEditable;
                 }
+
+                // field("Item No."; Rec."Item No.")
+                // {
+                //     ApplicationArea = All;
+                //     Editable = gBolEditable;
+
+                //     trigger OnLookup(var Text: Text): Boolean
+                //     var
+                //         lRecItem: Record Item;
+                //         lRecHeader: Record "PR Material Header";
+                //         lPageItemList: Page "Item List";
+                //     begin
+
+                //         if Rec.Type = Rec.Type::Item then begin
+
+
+                //             if lRecHeader.Get(Rec."Purchase Req. No.") then begin
+                //                 lRecItem.Reset();
+
+
+                //                 if lRecHeader."Item Category Code" <> '' then
+                //                     lRecItem.SetRange("Item Category Code", lRecHeader."Item Category Code");
+                //             end;
+
+
+                //             lPageItemList.SetTableView(lRecItem);
+                //             lPageItemList.LookupMode(true);
+
+                //             if lPageItemList.RunModal() = Action::LookupOK then begin
+                //                 lPageItemList.GetRecord(lRecItem);
+
+
+                //                 Rec.Validate("Item No.", lRecItem."No.");
+                //                 CurrPage.Update(true);
+                //             end;
+
+
+                //             exit(true);
+                //         end;
+
+
+                //         exit(false);
+                //     end;
+                // }
                 field("Variant Code"; Rec."Variant Code")
                 {
                     ApplicationArea = all;
@@ -247,6 +291,17 @@ page 80106 "PR Material Subform"
         ELSE BEGIN
             gBolEditable := FALSE;
         END;
+    end;
+
+    trigger OnNewRecord(BelowxRec: Boolean)
+    var
+        lRecPRHeader: Record "PR Material Header";
+    begin
+        Rec.Type := Rec.Type::Item;
+        if lRecPRHeader.Get(Rec."Purchase Req. No.") then begin
+            // Ini yang membuat TableRelation di tabel Anda bisa langsung bekerja memfilter Item!
+            Rec."Item Category Code" := lRecPRHeader."Item Category Code";
+        end;
     end;
 
     var

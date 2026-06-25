@@ -398,6 +398,11 @@ table 80108 "RFQ Line Details"
         {
             DataClassification = ToBeClassified;
         }
+        field(43; "Expected Receipt Date"; Date)
+        {
+            DataClassification = ToBeClassified;
+            Caption = 'Expected Receipt Date';
+        }
 
     }
     keys

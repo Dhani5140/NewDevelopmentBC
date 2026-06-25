@@ -104,6 +104,7 @@ page 80136 "RFQ Line Details Subform"
                     ApplicationArea = All;
                     Editable = FALSE;
                 }
+
                 field("Line Amount"; Rec."Line Amount")
                 {
                     ApplicationArea = All;
@@ -162,6 +163,12 @@ page 80136 "RFQ Line Details Subform"
                     ApplicationArea = All;
                     Caption = 'Remarks RFQ';
                     Editable = gBolEditable;
+                }
+                field("Expected Receipt Date"; Rec."Expected Receipt Date")
+                {
+                    ApplicationArea = All;
+                    Editable = gsendtovendor; // Hanya bisa diedit saat negosiasi
+                    Caption = 'Expected Receipt Date';
                 }
             }
         }

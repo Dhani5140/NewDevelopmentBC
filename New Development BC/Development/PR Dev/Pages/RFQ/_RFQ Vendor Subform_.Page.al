@@ -72,6 +72,11 @@ page 80111 "RFQ Vendor Subform"
                     ApplicationArea = All;
                     Editable = FALSE;
                 }
+                field("Expected Receipt Date"; Rec."Expected Receipt Date")
+                {
+                    ApplicationArea = All;
+                    Editable = true;
+                }
                 // field("Ship-to Code"; Rec."Ship-to Code")
                 // {
                 //     ApplicationArea = All;

@@ -72,6 +72,31 @@ page 50160 "Vendsel List"
 
                 end;
             }
+            action("Print Vendor Evaluation")
+            {
+                ApplicationArea = All;
+                Caption = 'Vendor Delivery Evaluation';
+                Image = PrintReport;
+                Promoted = True;
+                PromotedCategory = Report;
+                PromotedIsBig = TRUE;
+                ToolTip = 'Cetak laporan evaluasi pengiriman vendor untuk dokumen yang disorot.';
+
+                trigger OnAction()
+                var
+                    lRecVensel: Record "Vensel Header";
+                begin
+
+                    Rec.TestField("Vensel No.");
+
+
+                    lRecVensel.Reset();
+                    lRecVensel.SetRange("Vensel No.", Rec."Vensel No.");
+
+
+                    Report.Run(Report::"Simple Vendor Evaluation", true, false, lRecVensel);
+                end;
+            }
         }
     }
     var

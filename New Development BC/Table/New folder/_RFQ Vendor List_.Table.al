@@ -178,6 +178,11 @@ table 80107 "RFQ Vendor List"
             DataClassification = ToBeClassified;
 
         }
+        field(18; "Expected Receipt Date"; Date)
+        {
+            DataClassification = ToBeClassified;
+            Caption = 'Expected Receipt Date';
+        }
     }
     keys
     {

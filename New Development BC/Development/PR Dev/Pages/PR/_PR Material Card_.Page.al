@@ -41,6 +41,16 @@ page 80105 "PR Material Card"
                 //         CurrPage.UPDATE;
                 //     end;
                 // }
+
+                field("PR Type"; Rec."PR Type")
+                {
+                    ApplicationArea = All;
+                    Editable = false;
+                    ToolTip = 'Specifies whether this is a New Request or a Replacement PR.';
+                    Style = Strong;
+
+                }
+
                 field("User ID"; Rec."User ID")
                 {
                     ApplicationArea = All;
@@ -51,6 +61,32 @@ page 80105 "PR Material Card"
                 //     ApplicationArea = All;
                 //     Editable = gBolEditable;
                 // }
+
+                // field("Item Category Code"; Rec."Item Category Code")
+                // {
+                //     ApplicationArea = All;
+                //     Editable = gBolEditable;
+                //     ShowMandatory = true;
+                //     ToolTip = 'Pilih kategori barang untuk dokumen PR ini. Satu PR hanya boleh memuat barang dari satu kategori.';
+                // }
+                field("Item Category Code"; Rec."Item Category Code")
+                {
+                    ApplicationArea = All;
+                    Editable = gBolEditable;
+                    ShowMandatory = true;
+                    ToolTip = 'Pilih kategori barang untuk dokumen PR ini. Satu PR hanya boleh memuat barang dari satu kategori.';
+
+                    // --- TAMBAHKAN TRIGGER INI ---
+                    trigger OnValidate()
+                    begin
+                        // 1. Simpan nilai Header ke database seketika
+                        CurrPage.SaveRecord();
+
+                        // 2. Paksa Subform untuk me-refresh data tanpa user harus tekan F5
+                        CurrPage."PR Material Subform".Page.Update(false);
+                    end;
+                    // -----------------------------
+                }
                 field("Document Date"; Rec."Document Date")
                 {
                     ApplicationArea = All;
@@ -433,6 +469,31 @@ page 80105 "PR Material Card"
                         ERROR('No Material Request Line to be get');
                     END;
                     CurrPage.UPDATE;
+                end;
+            }
+            action("Create Replacement PR")
+            {
+                ApplicationArea = All;
+                Caption = 'Create Replacement PR';
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                Image = CreateDocument;
+                ToolTip = 'Batalkan PR yang sudah dirilis ini dan buat draf PR Replacement baru.';
+
+                trigger OnAction()
+                var
+                    lCUPRFunct: Codeunit "PR Material Function";
+                begin
+                    // Validasi: Hanya untuk PR berstatus Released dan bertipe New Request
+                    if Rec.Status <> Rec.Status::Released then
+                        Error('Hanya PR dengan status Released yang bisa di-Replace.');
+
+                    if Rec."PR Type" = Rec."PR Type"::Replacement then
+                        Error('Dokumen ini sudah merupakan Replacement dan tidak bisa di-Replace lagi.');
+
+                    if Confirm('Apakah Anda yakin ingin membatalkan PR ini dan membuat PR Replacement baru?', false) then
+                        lCUPRFunct.CreateReplacementPR(Rec);
                 end;
             }
             // action("Create PO")

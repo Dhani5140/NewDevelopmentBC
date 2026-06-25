@@ -15,11 +15,74 @@ table 80104 "PR Material Line"
             Caption = 'Line No.';
             DataClassification = ToBeClassified;
         }
+        // field(3; "Item No."; Code[20])
+        // {
+        //     Caption = 'No.';
+        //     DataClassification = ToBeClassified;
+        //     TableRelation = if ("Type" = filter('Item')) Item where(Blocked = const(false))
+        //     else
+        //     if ("Type" = filter('Fixed Asset')) "Fixed Asset"
+        //     else
+        //     if ("Type" = filter('G/L Account')) "G/L Account";
+
+        //     trigger OnValidate()
+        //     var
+        //         lRecItem: Record Item;
+        //         lRecGL: Record "G/L Account";
+        //         lRecFA: Record "Fixed Asset";
+        //     begin
+        //         if "Type" = "Type"::Item then begin
+        //             lRecItem.RESET;
+        //             lRecItem.SETRANGE(lRecItem."No.", "Item No.");
+        //             IF lRecItem.FINDFIRST THEN BEGIN
+        //                 "Description" := lrecItem.Description;
+        //                 VALIDATE("VAT Prod. Posting Group", lRecItem."VAT Prod. Posting Group");
+
+        //                 VALIDATE("Direct Unit Cost", gCUMSIFunct.getPurchPrice("Vendor No.", "Item No.", "Document Date"));
+        //             END
+        //             ELSE BEGIN
+        //                 "Description" := '';
+        //                 VALIDATE("VAT Prod. Posting Group", '');
+
+        //                 VALIDATE("Direct Unit Cost", 0);
+        //             END;
+        //         end
+        //         else
+        //             if "Type" = "Type"::"G/L Account" then begin
+        //                 lRecGL.RESET;
+        //                 lRecGL.SETRANGE(lRecGL."No.", "Item No.");
+        //                 IF lRecGL.FINDFIRST THEN BEGIN
+        //                     Rec."Description" := lRecGL.Name;
+        //                     VALIDATE("VAT Bus. Posting Group", lRecGL."VAT Bus. Posting Group");
+        //                     VALIDATE("VAT Prod. Posting Group", lRecGL."VAT Prod. Posting Group");
+
+
+        //                 END
+        //                 ELSE BEGIN
+        //                     VALIDATE("VAT Bus. Posting Group", '');
+        //                     VALIDATE("VAT Prod. Posting Group", '');
+
+
+        //                 END;
+        //             end
+        //             else
+        //                 if "Type" = "Type"::"Fixed Asset" then begin
+        //                     lrecFA.Reset();
+        //                     if lrecFA.GET("Item No.") then begin
+        //                         "Description" := lrecFA.Description;
+        //                     end;
+        //                 end;
+        //         IF "Type" = "Type"::" " then Error('You cannot choose empty');
+        //     end;
+        // }
+
         field(3; "Item No."; Code[20])
         {
             Caption = 'No.';
             DataClassification = ToBeClassified;
-            TableRelation = if ("Type" = filter('Item')) Item where(Blocked = const(false))
+
+            // Properti TableRelation murni menyaring field fisik "Item Category Code" yang ada di baris ini
+            TableRelation = if ("Type" = filter('Item')) Item where("Item Category Code" = field("Item Category Code"), Blocked = const(false))
             else
             if ("Type" = filter('Fixed Asset')) "Fixed Asset"
             else
@@ -30,21 +93,37 @@ table 80104 "PR Material Line"
                 lRecItem: Record Item;
                 lRecGL: Record "G/L Account";
                 lRecFA: Record "Fixed Asset";
+                lRecPRHeader: Record "PR Material Header";
             begin
                 if "Type" = "Type"::Item then begin
                     lRecItem.RESET;
                     lRecItem.SETRANGE(lRecItem."No.", "Item No.");
                     IF lRecItem.FINDFIRST THEN BEGIN
-                        "Description" := lrecItem.Description;
-                        VALIDATE("VAT Prod. Posting Group", lRecItem."VAT Prod. Posting Group");
 
+                        // --- LOGIKA VALIDASI 1 PR = 1 KATEGORI ---
+                        if lRecPRHeader.Get(Rec."Purchase Req. No.") then begin
+                            lRecPRHeader.TestField("Item Category Code"); // Pastikan user sudah isi Kategori di Header
+                            if lRecItem."Item Category Code" <> lRecPRHeader."Item Category Code" then
+                                Error('Barang ini memiliki kategori "%1". Dokumen PR ini dikhususkan untuk kategori "%2".', lRecItem."Item Category Code", lRecPRHeader."Item Category Code");
+                        end;
+                        // -----------------------------------------------
+
+                        "Description" := lrecItem.Description;
+                        VALIDATE("Unit of Measure", lrecItem."Base Unit of Measure");
+
+                        // Tarik kategori dari Master Item ke baris PR
+                        "Item Category Code" := lRecItem."Item Category Code";
+
+                        // --- LOGIKA BAWAAN ANDA ---
+                        VALIDATE("VAT Prod. Posting Group", lRecItem."VAT Prod. Posting Group");
                         VALIDATE("Direct Unit Cost", gCUMSIFunct.getPurchPrice("Vendor No.", "Item No.", "Document Date"));
+                        // ---------------------------------------------------
                     END
                     ELSE BEGIN
                         "Description" := '';
                         VALIDATE("VAT Prod. Posting Group", '');
-
                         VALIDATE("Direct Unit Cost", 0);
+                        "Item Category Code" := ''; // Reset kategori jika item dihapus/kosong
                     END;
                 end
                 else
@@ -55,14 +134,10 @@ table 80104 "PR Material Line"
                             Rec."Description" := lRecGL.Name;
                             VALIDATE("VAT Bus. Posting Group", lRecGL."VAT Bus. Posting Group");
                             VALIDATE("VAT Prod. Posting Group", lRecGL."VAT Prod. Posting Group");
-
-
                         END
                         ELSE BEGIN
                             VALIDATE("VAT Bus. Posting Group", '');
                             VALIDATE("VAT Prod. Posting Group", '');
-
-
                         END;
                     end
                     else
@@ -72,6 +147,7 @@ table 80104 "PR Material Line"
                                 "Description" := lrecFA.Description;
                             end;
                         end;
+
                 IF "Type" = "Type"::" " then Error('You cannot choose empty');
             end;
         }
@@ -436,7 +512,19 @@ table 80104 "PR Material Line"
             Caption = 'Budgeted Amount';
             Editable = false;
         }
-
+        field(64; "Item Category Code"; Code[20])
+        {
+            Caption = 'Item Category Code';
+            TableRelation = "Item Category";
+            Editable = false; // Karena ditarik otomatis dari Master Item
+        }
+        field(65; "Header Item Category"; Code[20])
+        {
+            Caption = 'Header Item Category';
+            FieldClass = FlowField;
+            CalcFormula = lookup("PR Material Header"."Item Category Code" where("Purchase Req. No." = field("Purchase Req. No.")));
+            Editable = false;
+        }
 
 
 
@@ -596,7 +684,7 @@ table 80104 "PR Material Line"
         TotalBudget := GLBudgetEntry."Amount";
         Rec."GL Budgeted Amount" := TotalBudget;
 
-       
+
         GLEntry.SetRange("G/L Account No.", Rec."G/L Account No.");
         GLEntry.SetRange("Posting Date", StartDate, EndDate);
         TotalActual := 0;
@@ -605,18 +693,18 @@ table 80104 "PR Material Line"
                 TotalActual += GLEntry."Amount";
             until GLEntry.Next() = 0;
 
-         TotalCommitment := 0;
+        TotalCommitment := 0;
         PRLine.Reset();
         PRLine.SetRange("GL Budget Name", Rec."GL Budget Name");
         PRLine.SetRange("G/L Account No.", Rec."G/L Account No.");
         // Filter hanya PR yang statusnya masih open/aktif
-        PRLine.SetRange("Status", PRLine.Status::Open); 
+        PRLine.SetRange("Status", PRLine.Status::Open);
         if PRLine.FindSet() then
             repeat
                 TotalCommitment += PRLine."Total Amount";
             until PRLine.Next() = 0;
 
-       
+
         Rec."GL Available Budget" := TotalBudget - TotalActual - TotalCommitment;
     end;
 
