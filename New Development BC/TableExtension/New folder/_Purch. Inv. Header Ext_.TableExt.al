@@ -77,10 +77,6 @@ tableextension 80103 "Purch. Inv. Header Ext" extends "Purch. Inv. Header"
         field(73710; "Exported Date"; Date)
         {
         }
-        field(50101; "Actual Vendor No."; Code[20])
-        {
-            Caption = 'Actual Vendor No.';
-            TableRelation = Vendor;
-        }
+
     }
 }

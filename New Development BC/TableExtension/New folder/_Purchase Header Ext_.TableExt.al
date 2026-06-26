@@ -21,15 +21,21 @@ tableextension 80100 "Purchase Header Ext" extends "Purchase Header"
         // Add changes to table fields here
         field(50001; "Material Req. No."; code[50])
         {
+            Caption = 'Material Req. No.';
             DataClassification = ToBeClassified;
+            Editable = false;
         }
         field(50002; "Purchase Req. No."; code[20])
         {
+            Caption = 'Purchase Req. No.';
             DataClassification = ToBeClassified;
+            Editable = false;
         }
         field(50003; "RFQ No."; code[20])
         {
+            Caption = 'Purchase Req. No.';
             DataClassification = ToBeClassified;
+            Editable = false;
         }
         field(50004; "Shipping Date"; Date)
         {
@@ -90,15 +96,13 @@ tableextension 80100 "Purchase Header Ext" extends "Purchase Header"
         }
         field(73709; Exported; Boolean)
         {
+
         }
         field(73710; "Exported Date"; Date)
         {
+
         }
-        field(50201; "Actual Vendor No."; Code[20])
-        {
-            Caption = 'Actual Vendor No.';
-            TableRelation = Vendor;
-        }
+
 
     }
     var

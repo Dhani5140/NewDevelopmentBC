@@ -1003,7 +1003,7 @@ codeunit 80103 "RFQ Function"
                     // ====================================================================
                     // INI DIA KODENYA: Tarik Expected Receipt Date dari Vendor Selection
                     // ====================================================================
-                    if RFQVendor."Shipping Date" <> 0D then
+                    if RFQVendor."Expected Receipt Date" <> 0D then
                         PurchLine.Validate("Expected Receipt Date", RFQVendor."Expected Receipt Date");
                     // ====================================================================
 

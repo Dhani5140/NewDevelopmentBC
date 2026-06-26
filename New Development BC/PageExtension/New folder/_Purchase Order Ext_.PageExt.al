@@ -153,47 +153,56 @@ pageextension 80102 "Purchase Order Ext" extends "Purchase Order"
 
             group("Document Tracking")
             {
-
                 Image = OrderTracking;
+
                 action("Material Request")
                 {
                     ApplicationArea = all;
                     Caption = 'Material Request Document';
                     Image = OrderTracking;
                     trigger OnAction()
-                    VAR
+                    var
                         mr: Record "Material Req. Line";
-
                     begin
+                        // Cek apakah field MR sudah terisi
+                        Rec.TestField("Material Req. No.");
+
                         mr.SetRange("Material Req. No.", Rec."Material Req. No.");
                         page.run(PAGE::"Material Request Lines", mr);
                     end;
                 }
+
                 action("Purchase Request")
                 {
                     ApplicationArea = all;
                     Caption = 'Purchase Request Document';
                     Image = OrderTracking;
                     trigger OnAction()
-                    VAR
-                        mr: Record "PR Material Line";
-
+                    var
+                        pr: Record "PR Material Line";
                     begin
-                        mr.SetRange("Purchase Req. No.", Rec."Purchase Req. No.");
-                        page.run(PAGE::"PR Material Lines", mr);
+                        // Cek apakah field PR sudah terisi
+                        Rec.TestField("Purchase Req. No.");
+
+                        pr.SetRange("Purchase Req. No.", Rec."Purchase Req. No.");
+                        page.run(PAGE::"PR Material Lines", pr);
                     end;
                 }
+
                 action("RFQ DOC")
                 {
                     ApplicationArea = all;
                     Caption = 'RFQ Document';
                     Image = OrderTracking;
                     trigger OnAction()
-                    VAR
-                        mr: Record "RFQ Line";
+                    var
+                        rfq: Record "RFQ Line";
                     begin
-                        mr.SetRange("Purchase Req. No.", rec."Purchase Req. No.");
-                        page.run(PAGE::"RFQ Request Lines", mr);
+                        // Cek apakah field RFQ sudah terisi
+                        Rec.TestField("RFQ No.");
+
+                        rfq.SetRange("RFQ No.", Rec."RFQ No.");
+                        page.run(PAGE::"RFQ Request Lines", rfq);
                     end;
                 }
 
@@ -203,14 +212,16 @@ pageextension 80102 "Purchase Order Ext" extends "Purchase Order"
                     Caption = 'Vendor selection Document';
                     Image = OrderTracking;
                     trigger OnAction()
-                    VAR
-                        mr: Record "RFQ Line";
+                    var
+                        venselLine: Record "RFQ Line";
                     begin
-                        mr.SetRange("Purchase Req. No.", rec."Purchase Req. No.");
-                        page.run(PAGE::"vensel Request Lines", mr);
+                        // Sesuai mapping Anda sebelumnya, Vensel Doc memfilter berdasar PR No
+                        Rec.TestField("Purchase Req. No.");
+
+                        venselLine.SetRange("Purchase Req. No.", Rec."Purchase Req. No.");
+                        page.run(PAGE::"vensel Request Lines", venselLine);
                     end;
                 }
-
             }
         }
         addlast(processing)
@@ -218,5 +229,51 @@ pageextension 80102 "Purchase Order Ext" extends "Purchase Order"
 
         }
     }
+    trigger OnAfterGetRecord()
+    var
+        lRecVensel: Record "Vensel Header";
+        lRecRFQLineDetail: Record "RFQ Line Details";
+        IsModified: Boolean;
+    begin
+        IsModified := false;
 
+
+        if (Rec."RFQ No." = '') or (Rec."Purchase Req. No." = '') or (Rec."Material Req. No." = '') then begin
+
+
+            if lRecVensel.Get(Rec."Your Reference") then begin
+
+                if Rec."RFQ No." = '' then begin
+                    Rec."RFQ No." := lRecVensel."RFQ No.";
+                    IsModified := true;
+                end;
+
+
+                if lRecVensel."RFQ No." <> '' then begin
+                    lRecRFQLineDetail.Reset();
+                    lRecRFQLineDetail.SetRange("RFQ No.", lRecVensel."RFQ No."); // Filter ke nomor RFQ yang sama
+
+
+                    if lRecRFQLineDetail.FindFirst() then begin
+
+                        if Rec."Purchase Req. No." = '' then begin
+                            Rec."Purchase Req. No." := lRecRFQLineDetail."Purchase Req. No.";
+                            IsModified := true;
+                        end;
+
+                        if Rec."Material Req. No." = '' then begin
+                            Rec."Material Req. No." := lRecRFQLineDetail."Material Req. No.";
+                            IsModified := true;
+                        end;
+                    end;
+                end;
+            end;
+
+
+            if IsModified then
+                Rec.Modify(false);
+        end;
+    end;
 }
+
+

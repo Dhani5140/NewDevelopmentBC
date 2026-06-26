@@ -76,16 +76,16 @@ page 80105 "PR Material Card"
                     ShowMandatory = true;
                     ToolTip = 'Pilih kategori barang untuk dokumen PR ini. Satu PR hanya boleh memuat barang dari satu kategori.';
 
-                    // --- TAMBAHKAN TRIGGER INI ---
+
                     trigger OnValidate()
                     begin
-                        // 1. Simpan nilai Header ke database seketika
+
                         CurrPage.SaveRecord();
 
-                        // 2. Paksa Subform untuk me-refresh data tanpa user harus tekan F5
+
                         CurrPage."PR Material Subform".Page.Update(false);
                     end;
-                    // -----------------------------
+
                 }
                 field("Document Date"; Rec."Document Date")
                 {
@@ -479,15 +479,15 @@ page 80105 "PR Material Card"
                 PromotedCategory = Process;
                 PromotedIsBig = true;
                 Image = CreateDocument;
-                ToolTip = 'Batalkan PR yang sudah dirilis ini dan buat draf PR Replacement baru.';
+                ToolTip = 'Batalkan PR ini dan buat draf PR Replacement baru.';
 
                 trigger OnAction()
                 var
                     lCUPRFunct: Codeunit "PR Material Function";
                 begin
-                    // Validasi: Hanya untuk PR berstatus Released dan bertipe New Request
-                    if Rec.Status <> Rec.Status::Released then
-                        Error('Hanya PR dengan status Released yang bisa di-Replace.');
+
+                    if not (Rec.Status in [Rec.Status::Released, Rec.Status::"Pending Approval", Rec.Status::Closed]) then
+                        Error('Hanya PR dengan status Released, Pending Approval, atau Closed yang bisa di-Replace.');
 
                     if Rec."PR Type" = Rec."PR Type"::Replacement then
                         Error('Dokumen ini sudah merupakan Replacement dan tidak bisa di-Replace lagi.');

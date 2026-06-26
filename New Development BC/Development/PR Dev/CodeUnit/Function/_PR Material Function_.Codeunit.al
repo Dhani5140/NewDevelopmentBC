@@ -217,7 +217,8 @@ codeunit 80102 "PR Material Function"
         NewPRLine: Record "PR Material Line";
     begin
         // 1. Validasi: PR Lama harus sudah Released
-        OldPRHeader.TestField(Status, OldPRHeader.Status::Released);
+        if not (OldPRHeader.Status in [OldPRHeader.Status::Released, OldPRHeader.Status::"Pending Approval", OldPRHeader.Status::Closed]) then
+            Error('Hanya PR dengan status Released, Pending Approval, atau Closed yang bisa di-Replace.');
 
         // 2. Buat Header PR Baru
         NewPRHeader.Init();
