@@ -168,54 +168,54 @@ page 80105 "PR Material Card"
             }
             group(Dimension)
             {
-                // field("Shortcut Dimension 1 Code"; Rec."Shortcut Dimension 1 Code")
-                // {
-                //     ApplicationArea = all;
-                //     Caption = '1,2,1';
-                //     Editable = gBolEditable;
-                // }
-                // field("Shortcut Dimension 2 Code"; Rec."Shortcut Dimension 2 Code")
-                // {
-                //     ApplicationArea = all;
-                //     Caption = '1,2,2';
-                //     Editable = gBolEditable;
-                // }
-                // field("Shortcut Dimension 3 Code"; Rec."Shortcut Dimension 3 Code")
-                // {
-                //     ApplicationArea = all;
-                //     Caption = '1,2,3';
-                //     Editable = gBolEditable;
-                // }
-                // field("Shortcut Dimension 4 Code"; Rec."Shortcut Dimension 4 Code")
-                // {
-                //     ApplicationArea = all;
-                //     Caption = '1,2,4';
-                //     Editable = gBolEditable;
-                // }
-                // field("Shortcut Dimension 5 Code"; Rec."Shortcut Dimension 5 Code")
-                // {
-                //     ApplicationArea = all;
-                //     Caption = '1,2,5';
-                //     Editable = gBolEditable;
-                // }
-                // field("Shortcut Dimension 6 Code"; Rec."Shortcut Dimension 6 Code")
-                // {
-                //     ApplicationArea = all;
-                //     Caption = '1,2,6';
-                //     Editable = gBolEditable;
-                // }
-                // field("Shortcut Dimension 7 Code"; Rec."Shortcut Dimension 7 Code")
-                // {
-                //     ApplicationArea = all;
-                //     Caption = '1,2,7';
-                //     Editable = gBolEditable;
-                // }
-                // field("Shortcut Dimension 8 Code"; Rec."Shortcut Dimension 8 Code")
-                // {
-                //     ApplicationArea = all;
-                //     Caption = '1,2,8';
-                //     Editable = gBolEditable;
-                // }
+                field("Shortcut Dimension 1 Code"; Rec."Shortcut Dimension 1 Code")
+                {
+                    ApplicationArea = all;
+                    Caption = '1,2,1';
+                    Editable = gBolEditable;
+                }
+                field("Shortcut Dimension 2 Code"; Rec."Shortcut Dimension 2 Code")
+                {
+                    ApplicationArea = all;
+                    Caption = '1,2,2';
+                    Editable = gBolEditable;
+                }
+                field("Shortcut Dimension 3 Code"; Rec."Shortcut Dimension 3 Code")
+                {
+                    ApplicationArea = all;
+                    Caption = '1,2,3';
+                    Editable = gBolEditable;
+                }
+                field("Shortcut Dimension 4 Code"; Rec."Shortcut Dimension 4 Code")
+                {
+                    ApplicationArea = all;
+                    Caption = '1,2,4';
+                    Editable = gBolEditable;
+                }
+                field("Shortcut Dimension 5 Code"; Rec."Shortcut Dimension 5 Code")
+                {
+                    ApplicationArea = all;
+                    Caption = '1,2,5';
+                    Editable = gBolEditable;
+                }
+                field("Shortcut Dimension 6 Code"; Rec."Shortcut Dimension 6 Code")
+                {
+                    ApplicationArea = all;
+                    Caption = '1,2,6';
+                    Editable = gBolEditable;
+                }
+                field("Shortcut Dimension 7 Code"; Rec."Shortcut Dimension 7 Code")
+                {
+                    ApplicationArea = all;
+                    Caption = '1,2,7';
+                    Editable = gBolEditable;
+                }
+                field("Shortcut Dimension 8 Code"; Rec."Shortcut Dimension 8 Code")
+                {
+                    ApplicationArea = all;
+                    Caption = '1,2,8';
+                    Editable = gBolEditable;
+                }
             }
             part("PR Material Subform"; "PR Material Subform")
             {

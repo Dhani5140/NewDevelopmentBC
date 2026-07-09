@@ -1,6 +1,6 @@
 page 80103 "Material Req. Subform"
 {
-    Caption = 'Material Request Subform';
+    Caption = 'Request Order Subform';
     PageType = ListPart;
     ApplicationArea = all;
     SourceTable = "Material Req. Line";

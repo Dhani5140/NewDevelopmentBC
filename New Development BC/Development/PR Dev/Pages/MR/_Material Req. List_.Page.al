@@ -1,7 +1,7 @@
 page 80101 "Material Req. List"
 {
     ApplicationArea = All;
-    Caption = 'Material Request List';
+    Caption = 'Request Order List';
     PageType = List;
     SourceTable = "Material Req. Header";
     UsageCategory = Lists;

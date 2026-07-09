@@ -1,7 +1,7 @@
 page 80102 "Material Req. Card"
 {
     ApplicationArea = All;
-    Caption = 'Material Request ';
+    Caption = 'Request Order';
     PromotedActionCategoriesML = ENU = 'New,Process,Report,Approval Request,Action Approval';
     PageType = Card;
 
