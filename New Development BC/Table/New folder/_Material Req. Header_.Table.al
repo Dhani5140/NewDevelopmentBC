@@ -11,17 +11,28 @@ table 50136 "Material Req. Header"
         {
             DataClassification = ToBeClassified;
 
+            // trigger OnValidate()
+            // var
+            //     myInt: Integer;
+            // begin
+            //     IF "Material Req. No." <> xRec."Material Req. No." THEN BEGIN
+            //         grecMSISetup.GET;
+            //         // NoSeriesMgt.TestManual(grecMSISetup."Material Req. Nos.");
+            //         NoSeries.TestManual(grecMSISetup."Material Req. Nos.");
+            //         "No. Series" := '';
+            //     end;
+            // END;
             trigger OnValidate()
             var
-                myInt: Integer;
+                lRecMSISetup: Record "MII Setup";
             begin
+                lRecMSISetup.GET();
                 IF "Material Req. No." <> xRec."Material Req. No." THEN BEGIN
-                    grecMSISetup.GET;
-                    // NoSeriesMgt.TestManual(grecMSISetup."Material Req. Nos.");
-                    NoSeries.TestManual(grecMSISetup."Material Req. Nos.");
+                    NoSeries.TestManual(lRecMSISetup."Material Req. Nos.");
                     "No. Series" := '';
-                end;
-            END;
+                END;
+            end;
+
         }
         field(2; "User ID"; code[150])
         {
@@ -61,19 +72,45 @@ table 50136 "Material Req. Header"
         }
         field(7; "Location Code"; Code[20])
         {
+            // DataClassification = ToBeClassified;
+            // TableRelation = "Location";
+
+            // trigger OnValidate()
+            // var
+            //     lrecML: Record "Material Req. Line";
+            //     LabelConfirm: Label 'This will change "Location Code" in all line, do you want to continue?';
+            // begin
+            //     lrecML.RESET();
+            //     lrecML.SetRange("Material Req. No.", Rec."Material Req. No.");
+            //     IF lrecML.FINDFIRST then // IF Confirm(LabelConfirm) THEN BEGIN
+            //         updateDocLines(FieldNo("Location Code"));
+            //     // END;
+            // END;
+
             DataClassification = ToBeClassified;
             TableRelation = "Location";
 
             trigger OnValidate()
             var
                 lrecML: Record "Material Req. Line";
-                LabelConfirm: Label 'This will change "Location Code" in all line, do you want to continue?';
+                RecLocation: Record Location;
+                lRecMIISetup: Record "MII Setup";
             begin
+                // Auto-fill lokasi pengirim dari Setup Master Location
+                IF lRecMIISetup.GET() THEN BEGIN
+                    IF lRecMIISetup."Enable TO from RO" THEN BEGIN
+                        IF RecLocation.GET("Location Code") THEN BEGIN
+                            "Transfer-from Code" := RecLocation."Default Supplying";
+                            "In-Transit Code" := RecLocation."Default In-Transit";
+                        END;
+                    END;
+                END;
+
+                // Logika bawaan asli
                 lrecML.RESET();
                 lrecML.SetRange("Material Req. No.", Rec."Material Req. No.");
-                IF lrecML.FINDFIRST then // IF Confirm(LabelConfirm) THEN BEGIN
+                IF lrecML.FINDFIRST then
                     updateDocLines(FieldNo("Location Code"));
-                // END;
             END;
         }
         field(8; Status; Enum "PR Module Status")
@@ -272,6 +309,18 @@ table 50136 "Material Req. Header"
         {
             DataClassification = ToBeClassified;
         }
+        field(32; "Transfer-from Code"; Code[20])
+        {
+            DataClassification = ToBeClassified;
+            Caption = 'Transfer-from Code';
+            TableRelation = Location;
+        }
+        field(33; "In-Transit Code"; Code[20])
+        {
+            DataClassification = ToBeClassified;
+            Caption = 'In-Transit Code';
+            TableRelation = Location WHERE("Use As In-Transit" = CONST(true));
+        }
     }
     keys
     {
@@ -335,18 +384,46 @@ table 50136 "Material Req. Header"
         EXIT(grecMSISetup."Material Req. Nos.");
     end;
 
+    // procedure AssistEdit(): Boolean
+    // var
+    //     lRecMSISetup: Record "MII Setup";
+    // begin
+    //     lRecMSISetup.GET;
+    //     lRecMSISetup.TESTFIELD("Material Req. Nos.");
+    //     //IF NoSeriesMgt.SelectSeries(lRecMSISetup."Material Req. Nos.", xRec."No. Series", Rec."No. Series") THEN BEGIN
+    //     IF NoSeries.LookupRelatedNoSeries(lRecMSISetup."Material Req. Nos.", xRec."No. Series", Rec."No. Series") THEN BEGIN
+    //         //NoSeriesMgt.SetSeries(Rec."Material Req. No.");
+    //         NoSeries.GetNextNo(Rec."Material Req. No.");
+    //         EXIT(TRUE);
+    //     END;
+    // end;
+
+    // procedure AssistEdit(): Boolean
+    // var
+    //     lRecMSISetup: Record "MII Setup";
+    // begin
+    //     lRecMSISetup.GET;
+    //     lRecMSISetup.TESTFIELD("Material Req. Nos.");
+    //     IF NoSeries.LookupRelatedNoSeries(lRecMSISetup."Material Req. Nos.", xRec."No. Series", Rec."No. Series") THEN BEGIN
+    //         // PERBAIKAN: Assign hasil balikan GetNextNo ke field Document No. dan gunakan parameter "No. Series"
+    //         Rec."Material Req. No." := NoSeries.GetNextNo(Rec."No. Series");
+    //         EXIT(TRUE);
+    //     END;
+    // end;
+
     procedure AssistEdit(): Boolean
     var
         lRecMSISetup: Record "MII Setup";
+        OldNoSeries: Code[20];
     begin
-        lRecMSISetup.GET;
-        lRecMSISetup.TESTFIELD("Material Req. Nos.");
-        //IF NoSeriesMgt.SelectSeries(lRecMSISetup."Material Req. Nos.", xRec."No. Series", Rec."No. Series") THEN BEGIN
-        IF NoSeries.LookupRelatedNoSeries(lRecMSISetup."Material Req. Nos.", xRec."No. Series", Rec."No. Series") THEN BEGIN
-            //NoSeriesMgt.SetSeries(Rec."Material Req. No.");
-            NoSeries.GetNextNo(Rec."Material Req. No.");
-            EXIT(TRUE);
-        END;
+        lRecMSISetup.Get();
+        lRecMSISetup.TestField("Material Req. Nos.");
+
+        OldNoSeries := "No. Series";
+        if Noseries.LookupRelatedNoSeries(lRecMSISetup."Material Req. Nos.", OldNoSeries, "No. Series") then begin
+            "Material Req. No." := Noseries.GetNextNo("No. Series", WorkDate, true);  // Manual OK
+            exit(true);
+        end;
     end;
 
     procedure updfromMappingCOA()

@@ -75,6 +75,11 @@ page 80100 "MII Setup"
                     Caption = 'Create PO ON RFQ';
                     ApplicationArea = all;
                 }
+                field("Enable TO from RO"; Rec."Enable TO from RO")
+                {
+                    ApplicationArea = All;
+                    ToolTip = 'Mengaktifkan fitur pembuatan Transfer Order dari Material Request.';
+                }
 
 
             }

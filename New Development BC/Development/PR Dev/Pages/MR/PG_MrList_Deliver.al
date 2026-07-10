@@ -1,12 +1,12 @@
 page 50166 "Material Req. List deliver"
 {
     ApplicationArea = All;
-    Caption = 'Material Request List Deliver';
+    Caption = 'Request Order List Deliver';
     PageType = List;
     SourceTable = "Material Req. Header";
     UsageCategory = Lists;
     CardPageId = "Material Req. Card deliver";
-    Editable = false;
+    //Editable = false;
     SourceTableView = where(Status = filter(Released | Processed | Closed | "Partial Receive / Processed On PR"));
 
     layout
@@ -81,10 +81,16 @@ page 50166 "Material Req. List deliver"
     }
     trigger OnOpenPage()
     var
-        war: Record "Warehouse Employee";
         wms: Codeunit "WMS Management";
-
+        FilterLokasi: Text;
     begin
-        rec.SetFilter("Location Code", wms.GetWarehouseEmployeeLocationFilter(UserId));
+        // Ambil lokasi dari Warehouse Employee
+        FilterLokasi := wms.GetWarehouseEmployeeLocationFilter(UserId);
+
+
+        // Message('Lokasi user: %1', FilterLokasi);
+
+        // UBAH DARI "Location Code" MENJADI "Transfer-from Code"
+        rec.SetFilter("Transfer-from Code", FilterLokasi);
     end;
 }

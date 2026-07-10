@@ -339,6 +339,17 @@ table 80102 "Material Req. Line"
             Caption = 'Type';
             DataClassification = ToBeClassified;
         }
+        field(50; "Total Qty On Transfer Order"; Decimal)
+        {
+            Caption = 'Total Qty On Transfer Order';
+            FieldClass = FlowField;
+            CalcFormula = sum("Transfer Line".Quantity WHERE("Document No." = field("Transfer Order No."), "Item No." = field("Item No.")));
+        }
+        field(51; "Transfer Order No."; Code[20])
+        {
+            DataClassification = ToBeClassified;
+            Caption = 'Transfer Order No.';
+        }
 
     }
     keys

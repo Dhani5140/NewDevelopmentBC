@@ -30,11 +30,12 @@ codeunit 80101 "Material Req. Function"
     var
         lRecMRLine: Record "Material Req. Line";
     begin
-        MRHeader.Testfield("Location Code");
-        //MRHeader.TestField("Shortcut Dimension 1 Code");
-        //MRHeader.TestField("Shortcut Dimension 3 Code");
-        MRHeader.TestField("Requester Department");
-        MRHeader.TestField("Requester Name");
+        //Tolong di cek kembali
+        // MRHeader.Testfield("Location Code");
+        // MRHeader.TestField("Shortcut Dimension 1 Code");
+        // MRHeader.TestField("Shortcut Dimension 3 Code");
+        // MRHeader.TestField("Requester Department");
+        // MRHeader.TestField("Requester Name");
 
         lRecMRLine.RESET;
         lRecMRLine.SETRANGE(lRecMRLine."Material Req. No.", MRHeader."Material Req. No.");
@@ -811,6 +812,146 @@ codeunit 80101 "Material Req. Function"
             EXIT(lRecInvDocLine."Line No." + 10000)
         ELSE
             EXIT(10000);
+    end;
+    // // ---> TAMBAHKAN PROCEDURE INI <---
+    // procedure createTransferOrder_MR(var ParMRHeader: Record "Material Req. Header")
+    // var
+    //     TransHeader: Record "Transfer Header";
+    //     TransLine: Record "Transfer Line";
+    //     MRLine: Record "Material Req. Line";
+    //     lRecMIISetup: Record "MII Setup";
+    //     LineNo: Integer;
+    // begin
+    //     // 1. Cek Setup MII (Validasi Ganda)
+    //     lRecMIISetup.GET();
+    //     IF NOT lRecMIISetup."Enable TO from RO" THEN
+    //         ERROR('Fitur Create Transfer Order dari Request Order sedang dinonaktifkan di sistem.');
+
+    //     // 2. Validasi Header
+    //     ParMRHeader.TestField("Transfer-from Code");
+    //     ParMRHeader.TestField("Location Code");
+    //     ParMRHeader.TestField("In-Transit Code");
+
+    //     IF ParMRHeader."Transfer-from Code" = ParMRHeader."Location Code" THEN
+    //         ERROR('Lokasi asal dan tujuan tidak boleh sama.');
+
+    //     // 3. Create Transfer Header
+    //     TransHeader.INIT;
+    //     TransHeader.INSERT(TRUE);
+
+    //     TransHeader.VALIDATE("Transfer-from Code", ParMRHeader."Transfer-from Code");
+    //     TransHeader.VALIDATE("Transfer-to Code", ParMRHeader."Location Code");
+    //     TransHeader.VALIDATE("In-Transit Code", ParMRHeader."In-Transit Code");
+    //     TransHeader."External Document No." := ParMRHeader."Material Req. No.";
+    //     TransHeader.MODIFY(TRUE);
+
+    //     // 4. Create Transfer Line
+    //     MRLine.RESET;
+    //     MRLine.SETRANGE("Material Req. No.", ParMRHeader."Material Req. No.");
+    //     MRLine.SETFILTER("Outstanding Quantity", '>%1', 0);
+
+    //     IF MRLine.FIND('-') THEN BEGIN
+    //         LineNo := 10000;
+    //         REPEAT
+    //             TransLine.INIT;
+    //             TransLine.VALIDATE("Document No.", TransHeader."No.");
+    //             TransLine."Line No." := LineNo;
+    //             TransLine.INSERT(TRUE);
+
+    //             TransLine.VALIDATE("Item No.", MRLine."Item No.");
+    //             TransLine.VALIDATE(Quantity, MRLine."Outstanding Quantity");
+    //             TransLine.MODIFY(TRUE);
+
+    //             MRLine."Transfer Order No." := TransHeader."No.";
+    //             MRLine.MODIFY;
+
+    //             LineNo += 10000;
+    //         UNTIL MRLine.NEXT = 0;
+    //     END ELSE BEGIN
+    //         ERROR('Tidak ada baris Material Request dengan Outstanding Quantity > 0.');
+    //     END;
+
+    //     // 5. Update Status RO 
+    //     closedStatus_MR(ParMRHeader."Material Req. No.");
+
+    //     COMMIT;
+    //     MESSAGE('Transfer Order %1 berhasil dibuat.', TransHeader."No.");
+    //     PAGE.RUN(PAGE::"Transfer Order", TransHeader);
+    // end;
+
+    procedure createTransferOrder_MR(var ParMRHeader: Record "Material Req. Header")
+    var
+        TransHeader: Record "Transfer Header";
+        TransLine: Record "Transfer Line";
+        MRLine: Record "Material Req. Line";
+        lRecMIISetup: Record "MII Setup";
+        LineNo: Integer;
+    begin
+        // 1. Cek Setup MII (Validasi Ganda)
+        lRecMIISetup.GET();
+        IF NOT lRecMIISetup."Enable TO from RO" THEN
+            ERROR('Fitur Create Transfer Order dari Request Order sedang dinonaktifkan di sistem.');
+
+        // 2. Validasi Header
+        ParMRHeader.TestField("Transfer-from Code");
+        ParMRHeader.TestField("Location Code");
+        ParMRHeader.TestField("In-Transit Code");
+
+        IF ParMRHeader."Transfer-from Code" = ParMRHeader."Location Code" THEN
+            ERROR('Lokasi asal dan tujuan tidak boleh sama.');
+
+        // 3. Create Transfer Header
+        TransHeader.INIT;
+        TransHeader.INSERT(TRUE);
+
+        TransHeader.VALIDATE("Transfer-from Code", ParMRHeader."Transfer-from Code");
+        TransHeader.VALIDATE("Transfer-to Code", ParMRHeader."Location Code");
+        TransHeader.VALIDATE("In-Transit Code", ParMRHeader."In-Transit Code");
+        TransHeader."External Document No." := ParMRHeader."Material Req. No.";
+
+        // Mapping Material Req. No. ke Transfer Header
+        TransHeader."Material Req. No." := ParMRHeader."Material Req. No.";
+
+        TransHeader.MODIFY(TRUE);
+
+        // 4. Create Transfer Line
+        MRLine.RESET;
+        MRLine.SETRANGE("Material Req. No.", ParMRHeader."Material Req. No.");
+        MRLine.SETFILTER("Outstanding Quantity", '>%1', 0);
+
+        IF MRLine.FIND('-') THEN BEGIN
+            LineNo := 10000;
+            REPEAT
+                TransLine.INIT;
+                TransLine.VALIDATE("Document No.", TransHeader."No.");
+                TransLine."Line No." := LineNo;
+                TransLine.INSERT(TRUE);
+
+                TransLine.VALIDATE("Item No.", MRLine."Item No.");
+                TransLine.VALIDATE(Quantity, MRLine."Outstanding Quantity");
+
+                // Mapping Material Req. No. & Line No. ke Transfer Line
+                TransLine."Material Req. No." := MRLine."Material Req. No.";
+                TransLine."Material Req. Line No." := MRLine."Line No.";
+
+                TransLine.MODIFY(TRUE);
+
+                // Update RO Line agar mencatat TO
+                MRLine."Transfer Order No." := TransHeader."No.";
+                MRLine.MODIFY;
+
+                LineNo += 10000;
+            UNTIL MRLine.NEXT = 0;
+        END ELSE BEGIN
+            ERROR('Tidak ada baris Material Request dengan Outstanding Quantity > 0.');
+        END;
+
+        // 5. Update Status RO 
+        closedStatus_MR(ParMRHeader."Material Req. No.");
+
+        COMMIT;
+        MESSAGE('Transfer Order %1 berhasil dibuat.', TransHeader."No.");
+        PAGE.RUN(PAGE::"Transfer Order", TransHeader);
     end;
 
     local procedure getItemJournalLastLineNo(parTemplate: Code[10]; parBatch: Code[10]): Integer

@@ -1,7 +1,7 @@
 page 50165 "Material Req. Card deliver"
 {
     ApplicationArea = All;
-    Caption = 'Material Request ';
+    Caption = 'Request Order ';
     PromotedActionCategoriesML = ENU = 'New,Process,Report,Approval Request,Action Approval';
     PageType = Card;
     SourceTable = "Material Req. Header";
@@ -107,6 +107,20 @@ page 50165 "Material Req. Card deliver"
                     ApplicationArea = ALL;
                     Editable = Edit;
                     MultiLine = TRUE;
+                }
+                field("Transfer-from Code"; Rec."Transfer-from Code")
+                {
+                    ApplicationArea = All;
+                    Editable = false;
+                    ShowMandatory = true;
+                    Visible = TOActive;
+                }
+                field("In-Transit Code"; Rec."In-Transit Code")
+                {
+                    ApplicationArea = All;
+                    Editable = false;
+                    ShowMandatory = true;
+                    Visible = TOActive;
                 }
             }
 
@@ -292,6 +306,25 @@ page 50165 "Material Req. Card deliver"
                     gCUPRFunct.createPRHeader_MR(Rec);
                 end;
             }
+            action("Create Transfer Order")
+            {
+                ApplicationArea = All;
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                PromotedOnly = true;
+                Image = TransferOrder;
+                Visible = TOActive;
+
+                trigger OnAction()
+                begin
+                    CurrPage.UPDATE();
+                    IF NOT (Rec.Status IN [Rec.Status::Released, Rec.Status::Processed, Rec.Status::"Partial Receive / Processed On PR"]) THEN
+                        ERROR('Status must be released or process to create transfer order');
+
+                    gCUMRFunct.createTransferOrder_MR(Rec);
+                end;
+            }
             action("Create Invt. Shipment")
             {
                 ApplicationArea = All;
@@ -346,18 +379,22 @@ page 50165 "Material Req. Card deliver"
     var
 
     begin
-        Editable := TRUE;
-
-
+        IF NOT MIISetup.GET(0) THEN // Kalau 0 tidak ada, coba MIISetup.FINDFIRST
+            IF NOT MIISetup.FINDFIRST THEN
+                TOActive := FALSE
+            ELSE
+                TOActive := MIISetup."Enable TO from RO"
+        ELSE
+            TOActive := MIISetup."Enable TO from RO";
     end;
 
     trigger OnAfterGetRecord()
     begin
-        IF Rec.Status = Rec.Status::Open THEN BEGIN
-            Editable := TRUE;
-        END
-        ELSE BEGIN
-            Editable := FALSE;
+        // Ganti Editable menjadi Edit (sesuai deklarasi var)
+        IF Rec.Status IN [Rec.Status::Released, Rec.Status::Processed, Rec.Status::"Partial Receive / Processed On PR"] THEN BEGIN
+            Edit := TRUE;
+        END ELSE BEGIN
+            Edit := FALSE;
         END;
     end;
     // trigger OnInsertRecord(BelowxRec: Boolean): Boolean
@@ -372,4 +409,6 @@ page 50165 "Material Req. Card deliver"
         gCUPRFunct: Codeunit "PR Material Function";
         gCUApproval_MR: Codeunit "Material Req. Approval";
         Edit: Boolean;
+        MIISetup: Record "MII Setup";
+        TOActive: Boolean;
 }

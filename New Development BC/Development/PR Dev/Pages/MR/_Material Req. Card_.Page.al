@@ -33,6 +33,7 @@ page 80102 "Material Req. Card"
                         end;
                     end;
                 }
+
                 field("User ID"; Rec."User ID")
                 {
                     ApplicationArea = ALL;
@@ -44,6 +45,7 @@ page 80102 "Material Req. Card"
                     ApplicationArea = all;
                     Editable = Edit;
                     ShowMandatory = false;
+                    Visible = false;
 
                 }
                 field("Requester Name"; Rec."Requester Name")
@@ -95,11 +97,13 @@ page 80102 "Material Req. Card"
                 {
                     ApplicationArea = ALL;
                     Editable = FALSE;
+                    Visible = false;
                 }
                 field("Gen Bus. Posting Group"; Rec."Gen Bus. Posting Group")
                 {
                     ApplicationArea = ALL;
                     Editable = Edit;
+                    Visible = false;
                 }
                 field(Status; Rec.Status)
                 {
@@ -121,6 +125,21 @@ page 80102 "Material Req. Card"
                 {
                     ApplicationArea = all;
                 }
+                field("Transfer-from Code"; Rec."Transfer-from Code")
+                {
+                    ApplicationArea = All;
+                    Editable = Edit;
+                    ShowMandatory = true;
+                    Visible = TOActive;
+                }
+                field("In-Transit Code"; Rec."In-Transit Code")
+                {
+                    ApplicationArea = All;
+                    Editable = Edit;
+                    ShowMandatory = true;
+                    Visible = TOActive;
+                }
+
             }
 
             part("Material Req. Subform"; "Material Req. Subform")
@@ -339,23 +358,41 @@ page 80102 "Material Req. Card"
                     gCUPRFunct.createPRHeader_MR(Rec);
                 end;
             }
-            // action("Create Invt. Shipment")
+            // action("Create Transfer Order")
             // {
             //     ApplicationArea = All;
             //     Promoted = true;
             //     PromotedCategory = Process;
             //     PromotedIsBig = true;
             //     PromotedOnly = true;
-            //     Image = CreateDocument;
+            //     Image = TransferOrder;
+            //     Visible = TOActive;
 
             //     trigger OnAction()
             //     begin
             //         CurrPage.UPDATE();
-            //         IF NOT (Rec.Status IN [Rec.Status::Released, Rec.Status::Processed]) THEN ERROR('Status must be released or process to create inventory shipment');
-            //         // gCUMRFunct.checkInventoryLine(Rec);
-            //         gCUMRFunct.createInvDocHeader_MR(Rec);
+            //         IF NOT (Rec.Status IN [Rec.Status::Released, Rec.Status::Processed]) THEN
+            //             ERROR('Status must be released or process to create transfer order');
+            //         gCUMRFunct.createTransferOrder_MR(Rec);
             //     end;
             // }
+            action("Create Invt. Shipment")
+            {
+                ApplicationArea = All;
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                PromotedOnly = true;
+                Image = CreateDocument;
+
+                trigger OnAction()
+                begin
+                    CurrPage.UPDATE();
+                    IF NOT (Rec.Status IN [Rec.Status::Released, Rec.Status::Processed]) THEN ERROR('Status must be released or process to create inventory shipment');
+                    // gCUMRFunct.checkInventoryLine(Rec);
+                    gCUMRFunct.createInvDocHeader_MR(Rec);
+                end;
+            }
             // action("Create Invt. Shipment Purch. Rcpt.")
             // {
             //     ApplicationArea = All;
@@ -467,7 +504,10 @@ page 80102 "Material Req. Card"
     }
     trigger OnOpenPage()
     begin
-        Edit := TRUE;
+        IF MIISetup.GET() THEN
+            TOActive := MIISetup."Enable TO from RO"
+        ELSE
+            Edit := TRUE;
     end;
 
     trigger OnAfterGetRecord()
@@ -497,4 +537,6 @@ page 80102 "Material Req. Card"
         gCUPRFunct: Codeunit "PR Material Function";
         gCUApproval_MR: Codeunit "Material Req. Approval";
         Edit: Boolean;
+        MIISetup: Record "MII Setup";
+        TOActive: Boolean;
 }

@@ -134,6 +134,12 @@ table 80100 "MII Setup"
         {
             DataClassification = ToBeClassified;
         }
+        field(27; "Enable TO from RO"; Boolean)
+        {
+            DataClassification = ToBeClassified;
+            Caption = 'Transfer Order to Request Order Active';
+            InitValue = true;
+        }
     }
     keys
     {
