@@ -1,6 +1,6 @@
 // codeunit 50105 "RO TO Subscriber"
 // {
-//     // 1. Dengerin pas Transfer Shipment Header (Barang dikirim) dibuat
+
 //     [EventSubscriber(ObjectType::Table, Database::"Transfer Shipment Header", 'OnAfterInsertEvent', '', false, false)]
 //     local procedure OnAfterInsertTransferShipment(var Rec: Record "Transfer Shipment Header"; RunTrigger: Boolean)
 //     var
@@ -19,14 +19,14 @@
 //         end;
 //     end;
 
-//     // 2. Dengerin pas Transfer Receipt Header (Barang diterima) dibuat
+
 //     [EventSubscriber(ObjectType::Table, Database::"Transfer Receipt Header", 'OnAfterInsertEvent', '', false, false)]
 //     local procedure OnAfterInsertTransferReceipt(var Rec: Record "Transfer Receipt Header"; RunTrigger: Boolean)
 //     var
 //         TransHeader: Record "Transfer Header";
 //         MRHeader: Record "Material Req. Header";
 //     begin
-//         // Cari Transfer Order asalnya
+// 
 //         if TransHeader.Get(Rec."Transfer Order No.") then begin
 //             if TransHeader."Material Req. No." <> '' then begin
 //                 if MRHeader.Get(TransHeader."Material Req. No.") then begin
@@ -41,7 +41,7 @@
 
 codeunit 50105 "RO TO Subscriber"
 {
-    // 1. Dengerin pas Transfer Shipment Header (Barang dikirim) dibuat
+
     [EventSubscriber(ObjectType::Table, Database::"Transfer Shipment Header", 'OnAfterInsertEvent', '', false, false)]
     local procedure OnAfterInsertTransferShipment(var Rec: Record "Transfer Shipment Header"; RunTrigger: Boolean)
     var
@@ -60,7 +60,6 @@ codeunit 50105 "RO TO Subscriber"
         end;
     end;
 
-    // 2. Dengerin pas Transfer Receipt Header (Barang diterima) dibuat
     [EventSubscriber(ObjectType::Table, Database::"Transfer Receipt Header", 'OnAfterInsertEvent', '', false, false)]
     local procedure OnAfterInsertTransferReceipt(var Rec: Record "Transfer Receipt Header"; RunTrigger: Boolean)
     var
@@ -79,7 +78,7 @@ codeunit 50105 "RO TO Subscriber"
         end;
     end;
 
-    // 3. Update Outstanding Quantity di RO Line pas Barang di-Ship
+
     [EventSubscriber(ObjectType::Table, Database::"Transfer Shipment Line", 'OnAfterInsertEvent', '', false, false)]
     local procedure UpdateROLineOnShip(var Rec: Record "Transfer Shipment Line"; RunTrigger: Boolean)
     var
