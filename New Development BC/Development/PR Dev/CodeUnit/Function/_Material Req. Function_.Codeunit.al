@@ -138,6 +138,71 @@ codeunit 80101 "Material Req. Function"
         END;
         EXIT(FALSE);
     end;
+    // Penambahan Min Max
+    procedure SuggestMinMaxItems(var ParMRHeader: Record "Material Req. Header")
+    var
+        lRecSKU: Record "Stockkeeping Unit";
+        lRecMRLine: Record "Material Req. Line";
+        NextLineNo: Integer;
+        QtyToOrder: Decimal;
+        LineAdded: Boolean;
+    begin
+        ParMRHeader.TestField("Location Code");
+        LineAdded := false;
+
+        // 1. Cari Line Number terakhir agar tidak bentrok
+        lRecMRLine.RESET;
+        lRecMRLine.SETRANGE("Material Req. No.", ParMRHeader."Material Req. No.");
+        IF lRecMRLine.FINDLAST THEN
+            NextLineNo := lRecMRLine."Line No." + 10000
+        ELSE
+            NextLineNo := 10000;
+
+        // 2. Filter SKU berdasarkan Lokasi (Outlet) yang dipilih di Header
+        lRecSKU.RESET;
+        lRecSKU.SETRANGE("Location Code", ParMRHeader."Location Code");
+        lRecSKU.SETFILTER("Maximum Inventory", '>%1', 0); // Pastikan SKU punya setup Max Inventory
+
+        IF lRecSKU.FINDSET THEN BEGIN
+            REPEAT
+                // Hitung stok aktual (Real-time Inventory)
+                lRecSKU.CALCFIELDS(Inventory);
+
+                // 3. Logika Min/Max: Jika Stok <= Minimal (Reorder Point)
+                IF lRecSKU.Inventory <= lRecSKU."Reorder Point" THEN BEGIN
+                    QtyToOrder := lRecSKU."Maximum Inventory" - lRecSKU.Inventory;
+
+                    IF QtyToOrder > 0 THEN BEGIN
+                        // Validasi agar tidak merekomendasikan Item yang sudah di-input manual di baris
+                        lRecMRLine.RESET;
+                        lRecMRLine.SETRANGE("Material Req. No.", ParMRHeader."Material Req. No.");
+                        lRecMRLine.SETRANGE("Item No.", lRecSKU."Item No.");
+                        IF NOT lRecMRLine.FINDFIRST THEN BEGIN
+
+                            // Insert baris baru secara otomatis
+                            lRecMRLine.INIT;
+                            lRecMRLine."Material Req. No." := ParMRHeader."Material Req. No.";
+                            lRecMRLine."Line No." := NextLineNo;
+                            lRecMRLine.INSERT(TRUE);
+
+                            lRecMRLine.VALIDATE("Item No.", lRecSKU."Item No.");
+                            lRecMRLine.VALIDATE(Quantity, QtyToOrder);
+                            lRecMRLine.MODIFY(TRUE);
+
+                            NextLineNo += 10000;
+                            LineAdded := true;
+                        END;
+                    END;
+                END;
+            UNTIL lRecSKU.NEXT = 0;
+        END;
+
+        // 4. Notifikasi ke User Outlet
+        IF LineAdded THEN
+            MESSAGE('Item yang di bawah batas minimum berhasil ditambahkan ke baris otomatis!')
+        ELSE
+            MESSAGE('Semua stok item masih aman (di atas batas minimum), atau setup SKU lokasi ini belum dibuat.');
+    end;
 
     procedure checkMRLineNonPPH22hasPurchRcpt(MRNo: Code[20]): Boolean
     var
@@ -879,12 +944,88 @@ codeunit 80101 "Material Req. Function"
     //     PAGE.RUN(PAGE::"Transfer Order", TransHeader);
     // end;
 
+    // procedure createTransferOrder_MR(var ParMRHeader: Record "Material Req. Header")
+    // var
+    //     TransHeader: Record "Transfer Header";
+    //     TransLine: Record "Transfer Line";
+    //     MRLine: Record "Material Req. Line";
+    //     lRecMIISetup: Record "MII Setup";
+    //     LineNo: Integer;
+    // begin
+    //     // 1. Cek Setup MII (Validasi Ganda)
+    //     lRecMIISetup.GET();
+    //     IF NOT lRecMIISetup."Enable TO from RO" THEN
+    //         ERROR('Fitur Create Transfer Order dari Request Order sedang dinonaktifkan di sistem.');
+
+    //     // 2. Validasi Header
+    //     ParMRHeader.TestField("Transfer-from Code");
+    //     ParMRHeader.TestField("Location Code");
+    //     ParMRHeader.TestField("In-Transit Code");
+
+    //     IF ParMRHeader."Transfer-from Code" = ParMRHeader."Location Code" THEN
+    //         ERROR('Lokasi asal dan tujuan tidak boleh sama.');
+
+    //     // 3. Create Transfer Header
+    //     TransHeader.INIT;
+    //     TransHeader.INSERT(TRUE);
+
+    //     TransHeader.VALIDATE("Transfer-from Code", ParMRHeader."Transfer-from Code");
+    //     TransHeader.VALIDATE("Transfer-to Code", ParMRHeader."Location Code");
+    //     TransHeader.VALIDATE("In-Transit Code", ParMRHeader."In-Transit Code");
+    //     TransHeader."External Document No." := ParMRHeader."Material Req. No.";
+
+    //     // Mapping Material Req. No. ke Transfer Header
+    //     TransHeader."Material Req. No." := ParMRHeader."Material Req. No.";
+
+    //     TransHeader.MODIFY(TRUE);
+
+    //     // 4. Create Transfer Line
+    //     MRLine.RESET;
+    //     MRLine.SETRANGE("Material Req. No.", ParMRHeader."Material Req. No.");
+    //     MRLine.SETFILTER("Outstanding Quantity", '>%1', 0);
+
+    //     IF MRLine.FIND('-') THEN BEGIN
+    //         LineNo := 10000;
+    //         REPEAT
+    //             TransLine.INIT;
+    //             TransLine.VALIDATE("Document No.", TransHeader."No.");
+    //             TransLine."Line No." := LineNo;
+    //             TransLine.INSERT(TRUE);
+
+    //             TransLine.VALIDATE("Item No.", MRLine."Item No.");
+    //             TransLine.VALIDATE(Quantity, MRLine."Outstanding Quantity");
+
+    //             // Mapping Material Req. No. & Line No. ke Transfer Line
+    //             TransLine."Material Req. No." := MRLine."Material Req. No.";
+    //             TransLine."Material Req. Line No." := MRLine."Line No.";
+
+    //             TransLine.MODIFY(TRUE);
+
+    //             // Update RO Line agar mencatat TO
+    //             MRLine."Transfer Order No." := TransHeader."No.";
+    //             MRLine.MODIFY;
+
+    //             LineNo += 10000;
+    //         UNTIL MRLine.NEXT = 0;
+    //     END ELSE BEGIN
+    //         ERROR('Tidak ada baris Material Request dengan Outstanding Quantity > 0.');
+    //     END;
+
+    //     // 5. Update Status RO 
+    //     closedStatus_MR(ParMRHeader."Material Req. No.");
+
+    //     COMMIT;
+    //     MESSAGE('Transfer Order %1 berhasil dibuat.', TransHeader."No.");
+    //     PAGE.RUN(PAGE::"Transfer Order", TransHeader);
+    // end;
+
     procedure createTransferOrder_MR(var ParMRHeader: Record "Material Req. Header")
     var
         TransHeader: Record "Transfer Header";
         TransLine: Record "Transfer Line";
         MRLine: Record "Material Req. Line";
         lRecMIISetup: Record "MII Setup";
+        lRecItem: Record Item; // Variabel baru untuk cek stok master item
         LineNo: Integer;
     begin
         // 1. Cek Setup MII (Validasi Ganda)
@@ -900,7 +1041,35 @@ codeunit 80101 "Material Req. Function"
         IF ParMRHeader."Transfer-from Code" = ParMRHeader."Location Code" THEN
             ERROR('Lokasi asal dan tujuan tidak boleh sama.');
 
-        // 3. Create Transfer Header
+        // 3. --- VALIDASI INVENTORY WAJIB PR ---
+        MRLine.RESET;
+        MRLine.SETRANGE("Material Req. No.", ParMRHeader."Material Req. No.");
+        MRLine.SETFILTER("Outstanding Quantity", '>%1', 0);
+
+        IF MRLine.FINDSET() THEN BEGIN
+            REPEAT
+                // Tarik data langsung dari Master Item
+                IF lRecItem.GET(MRLine."Item No.") THEN BEGIN
+                    // Filter stok khusus di Gudang Asal (Central Kitchen)
+                    lRecItem.SETFILTER("Location Filter", ParMRHeader."Transfer-from Code");
+                    lRecItem.CALCFIELDS(Inventory);
+
+                    // Logika: Jika stok 0 (atau minus), tolak TO dan wajibkan buat PR
+                    IF lRecItem.Inventory <= 0 THEN
+                        ERROR('Stok untuk Item %1 di Gudang Asal (%2) kosong. Anda WAJIB membuat Purchase Request.', MRLine."Item No.", ParMRHeader."Transfer-from Code");
+
+                    // (Opsional) Jika Anda ingin mewajibkan PR ketika stok KURANG dari yang di-request, 
+                    // buka comment code di bawah ini:
+                    // IF lRecItem.Inventory < MRLine."Outstanding Quantity" THEN
+                    //     ERROR('Stok Item %1 di Gudang %2 tidak cukup (Sisa: %3). Anda WAJIB membuat Purchase Request.', MRLine."Item No.", ParMRHeader."Transfer-from Code", lRecItem.Inventory);
+                END;
+            UNTIL MRLine.NEXT() = 0;
+        END ELSE BEGIN
+            ERROR('Tidak ada baris Material Request dengan Outstanding Quantity > 0.');
+        END;
+        // ---------------------------------------
+
+        // 4. Create Transfer Header
         TransHeader.INIT;
         TransHeader.INSERT(TRUE);
 
@@ -914,8 +1083,8 @@ codeunit 80101 "Material Req. Function"
 
         TransHeader.MODIFY(TRUE);
 
-        // 4. Create Transfer Line
-        MRLine.RESET;
+        // 5. Create Transfer Line
+        MRLine.RESET; // Reset ulang filter MRLine untuk proses insert
         MRLine.SETRANGE("Material Req. No.", ParMRHeader."Material Req. No.");
         MRLine.SETFILTER("Outstanding Quantity", '>%1', 0);
 
@@ -942,11 +1111,9 @@ codeunit 80101 "Material Req. Function"
 
                 LineNo += 10000;
             UNTIL MRLine.NEXT = 0;
-        END ELSE BEGIN
-            ERROR('Tidak ada baris Material Request dengan Outstanding Quantity > 0.');
         END;
 
-        // 5. Update Status RO 
+        // 6. Update Status RO 
         closedStatus_MR(ParMRHeader."Material Req. No.");
 
         COMMIT;

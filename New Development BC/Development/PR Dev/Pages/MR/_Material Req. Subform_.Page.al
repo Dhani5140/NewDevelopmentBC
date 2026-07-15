@@ -118,11 +118,14 @@ page 80103 "Material Req. Subform"
                     Editable = TRUE;
                     Visible = FALSE; //CR
                 }
+
                 field("Total Qty On PR"; Rec."Total Qty On PR")
                 {
                     ApplicationArea = all;
                     Editable = FALSE;
                 }
+
+
                 field("Total Qty On Purch Rcpt"; Rec."Total Qty On Purch Rcpt")
                 {
                     ApplicationArea = all;
@@ -341,6 +344,11 @@ page 80103 "Material Req. Subform"
         END;
     end;
 
+    procedure GetOutstandingQty(): Decimal
+    begin
+        Rec.CalcFields("Total Ordered Quantity", "Total Shipped Quantity");
+        exit(Rec."Total Ordered Quantity" - Rec."Total Shipped Quantity");
+    end;
 
     var
         gBolEditable, greleased : Boolean;

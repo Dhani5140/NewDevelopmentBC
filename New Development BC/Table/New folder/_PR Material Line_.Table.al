@@ -100,13 +100,14 @@ table 80104 "PR Material Line"
                     lRecItem.SETRANGE(lRecItem."No.", "Item No.");
                     IF lRecItem.FINDFIRST THEN BEGIN
 
-                        // --- LOGIKA VALIDASI 1 PR = 1 KATEGORI ---
-                        if lRecPRHeader.Get(Rec."Purchase Req. No.") then begin
-                            lRecPRHeader.TestField("Item Category Code"); // Pastikan user sudah isi Kategori di Header
-                            if lRecItem."Item Category Code" <> lRecPRHeader."Item Category Code" then
-                                Error('Barang ini memiliki kategori "%1". Dokumen PR ini dikhususkan untuk kategori "%2".', lRecItem."Item Category Code", lRecPRHeader."Item Category Code");
-                        end;
-                        // -----------------------------------------------
+                        //UNTUK BPK Penabur
+                        // // --- LOGIKA VALIDASI 1 PR = 1 KATEGORI ---
+                        // if lRecPRHeader.Get(Rec."Purchase Req. No.") then begin
+                        //     lRecPRHeader.TestField("Item Category Code"); // Pastikan user sudah isi Kategori di Header
+                        //     if lRecItem."Item Category Code" <> lRecPRHeader."Item Category Code" then
+                        //         Error('Barang ini memiliki kategori "%1". Dokumen PR ini dikhususkan untuk kategori "%2".', lRecItem."Item Category Code", lRecPRHeader."Item Category Code");
+                        // end;
+                        // // -----------------------------------------------
 
                         "Description" := lrecItem.Description;
                         VALIDATE("Unit of Measure", lrecItem."Base Unit of Measure");

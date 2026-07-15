@@ -69,24 +69,26 @@ page 80105 "PR Material Card"
                 //     ShowMandatory = true;
                 //     ToolTip = 'Pilih kategori barang untuk dokumen PR ini. Satu PR hanya boleh memuat barang dari satu kategori.';
                 // }
-                field("Item Category Code"; Rec."Item Category Code")
-                {
-                    ApplicationArea = All;
-                    Editable = gBolEditable;
-                    ShowMandatory = true;
-                    ToolTip = 'Pilih kategori barang untuk dokumen PR ini. Satu PR hanya boleh memuat barang dari satu kategori.';
+
+                //BPK Penabur Only
+                // field("Item Category Code"; Rec."Item Category Code")
+                // {
+                //     ApplicationArea = All;
+                //     Editable = gBolEditable;
+                //     ShowMandatory = true;
+                //     ToolTip = 'Pilih kategori barang untuk dokumen PR ini. Satu PR hanya boleh memuat barang dari satu kategori.';
 
 
-                    trigger OnValidate()
-                    begin
+                //     trigger OnValidate()
+                //     begin
 
-                        CurrPage.SaveRecord();
+                //         CurrPage.SaveRecord();
 
 
-                        CurrPage."PR Material Subform".Page.Update(false);
-                    end;
+                //         CurrPage."PR Material Subform".Page.Update(false);
+                //     end;
 
-                }
+                // }
                 field("Document Date"; Rec."Document Date")
                 {
                     ApplicationArea = All;

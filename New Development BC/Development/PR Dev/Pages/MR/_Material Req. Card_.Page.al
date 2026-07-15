@@ -393,6 +393,28 @@ page 80102 "Material Req. Card"
                     gCUMRFunct.createInvDocHeader_MR(Rec);
                 end;
             }
+            action("Suggest Replenishment")
+            {
+                ApplicationArea = All;
+                Caption = 'Get Min/Max Replenishment';
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+                PromotedOnly = true;
+                Image = CalculatePlan;
+                ToolTip = 'Otomatis menyarankan kuantitas order berdasarkan batas minimal/maksimal di gudang.';
+
+                trigger OnAction()
+                begin
+                    CurrPage.UPDATE(TRUE); // Simpan header dulu (Location Code)
+
+                    // Validasi: Cuma bisa dipakai saat status RO masih Open
+                    IF Rec.Status <> Rec.Status::Open THEN
+                        ERROR('Fungsi ini hanya bisa digunakan saat status dokumen Open.');
+
+                    gCUMRFunct.SuggestMinMaxItems(Rec);
+                end;
+            }
             // action("Create Invt. Shipment Purch. Rcpt.")
             // {
             //     ApplicationArea = All;
